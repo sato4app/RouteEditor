@@ -1,0 +1,140 @@
+/* インラインスタイルから移動したスタイル */
+
+/* アクティブ状態のボタンのスタイル */
+.image-overlay-controls .leaflet-control.active {
+    background-color: #ddd;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* コントロール内のテキストボックスのスタイル調整 */
+.image-overlay-controls .leaflet-control input[type="text"] {
+    width: 90px;
+    border: none;
+    background-color: transparent;
+    pointer-events: none;
+    color: var(--color-dark);
+}
+
+/* ドラッグハンドルのアニメーション */
+@keyframes dragHandlePulse {
+    0% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.8; }
+}
+
+.drag-handle-pulse {
+    animation: dragHandlePulse 2s ease-in-out infinite;
+}
+
+/* ツールチップの統一スタイル */
+.drag-handle-tooltip,
+.center-marker-tooltip {
+    background-color: var(--color-tooltip) !important;
+    color: var(--color-white) !important;
+    border: none !important;
+    border-radius: var(--border-radius-small) !important;
+    font-size: var(--font-size-normal) !important;
+    padding: var(--spacing-small) var(--spacing-medium) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+.resize-info-tooltip {
+    background-color: rgba(0, 0, 0, 0.9) !important;
+    color: var(--color-white) !important;
+    border: none !important;
+    border-radius: 6px !important;
+    font-size: var(--font-size-large) !important;
+    font-weight: bold !important;
+    padding: 6px 12px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* アイコンの共通スタイル */
+.drag-handle-icon,
+.center-marker-icon {
+    background: none !important;
+    border: none !important;
+}
+
+.drag-handle-icon div,
+.center-marker-icon div {
+    transition: all var(--transition-fast);
+}
+
+.center-marker-icon div {
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+.drag-handle-icon:hover div,
+.center-marker-icon:hover div {
+    transform: scale(1.3);
+    background-color: #00bfff !important;
+    box-shadow: 0 0 10px rgba(0, 191, 255, 0.5);
+}
+
+/* ポイント操作ボタンのスタイル */
+.point-action-btn {
+    border: 2px solid var(--color-success);
+    color: var(--color-success);
+    background-color: var(--color-white);
+    padding: 6px 12px;
+    margin: 0 var(--spacing-small);
+    border-radius: var(--border-radius-small);
+    cursor: pointer;
+    font-size: var(--font-size-small);
+    transition: all var(--transition-fast);
+    width: 60px;
+    font-weight: var(--font-weight-bold);
+}
+
+.point-action-btn:hover {
+    background-color: var(--color-success);
+    color: var(--color-white);
+    transform: translateY(-1px);
+}
+
+.point-action-btn.selected {
+    background-color: var(--color-success);
+    color: var(--color-white);
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+.point-action-buttons {
+    margin-top: 10px;
+    text-align: left;
+    display: flex;
+    gap: var(--spacing-small);
+    flex-wrap: wrap;
+}
+
+/* フォーカス状態のアクセシビリティ改善 */
+button:focus,
+input:focus,
+select:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* ハイコントラスト対応 */
+@media (prefers-contrast: high) {
+    :root {
+        --color-overlay: rgba(255, 255, 255, 1);
+        --color-shadow: rgba(0, 0, 0, 0.3);
+        --color-border: rgba(0, 0, 0, 0.3);
+    }
+}
+
+/* ダークモード対応の基礎 */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-overlay: rgba(30, 30, 30, 0.95);
+        --color-dark: #ffffff;
+        --color-light: #333;
+        --color-white: #1e1e1e;
+        --color-border: rgba(255, 255, 255, 0.1);
+    }
+    
+    .overlay-controls {
+        color: var(--color-dark);
+    }
+}
