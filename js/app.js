@@ -38,9 +38,9 @@ function updateStats(geoJsonData) {
     }
 
     document.getElementById('fileCount').value = geoJsonData ? '1' : '0';
-    document.getElementById('pointCount').value = pointCount;
-    document.getElementById('routeCount').value = lineCount;
-    document.getElementById('spotCount').value = polygonCount;
+    document.getElementById('pointCount').value = Math.min(pointCount, 9999);
+    document.getElementById('routeCount').value = Math.min(lineCount, 9999);
+    document.getElementById('spotCount').value = Math.min(polygonCount, 9999);
 }
 
 // ファイル読み込み処理

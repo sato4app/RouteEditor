@@ -73,18 +73,30 @@ body {
 
 .stats-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     margin-bottom: 8px;
     font-size: 14px;
 }
 
+.stats-row span:first-child {
+    text-align: left;
+    min-width: 60px;
+}
+
 .stats-input {
-    width: 60px;
+    width: 50px;
+    max-width: 50px;
     padding: 2px 5px;
     border: 1px solid #ccc;
     border-radius: 3px;
     text-align: right;
+    font-family: monospace;
+    margin-left: auto;
+    margin-right: 5px;
+}
+
+.stats-row span:last-child {
+    min-width: 20px;
 }
 
 button {
