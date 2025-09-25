@@ -22,8 +22,8 @@ export const CONFIG = {
 // デフォルト設定
 export const DEFAULTS = {
     // 地図設定
-    MAP_CENTER: [35.6762, 139.6503], // 東京
-    MAP_ZOOM: 10,
+    MAP_CENTER: [34.853667, 135.472041], // 箕面大滝
+    MAP_ZOOM: 15,
     MAP_MAX_ZOOM: 18,
 
     // 地理院地図タイル

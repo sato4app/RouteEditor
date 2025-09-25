@@ -9,6 +9,53 @@ L.tileLayer(DEFAULTS.GSI_TILE_URL, {
     maxZoom: DEFAULTS.MAP_MAX_ZOOM
 }).addTo(map);
 
+// スケールコントロールを右下に追加
+L.control.scale({
+    position: 'bottomright',
+    metric: true,
+    imperial: false
+}).addTo(map);
+
+// カスタムズームコントロールを右下に追加
+const CustomZoomControl = L.Control.extend({
+    onAdd: function(map) {
+        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+
+        // ズームインボタン
+        const zoomInBtn = L.DomUtil.create('a', 'zoom-in-btn', container);
+        zoomInBtn.innerHTML = '＋';
+        zoomInBtn.href = '#';
+        zoomInBtn.title = 'ズームイン';
+
+        // ズームアウトボタン
+        const zoomOutBtn = L.DomUtil.create('a', 'zoom-out-btn', container);
+        zoomOutBtn.innerHTML = '－';
+        zoomOutBtn.href = '#';
+        zoomOutBtn.title = 'ズームアウト';
+
+        // イベントハンドラー
+        L.DomEvent.on(zoomInBtn, 'click', function(e) {
+            L.DomEvent.preventDefault(e);
+            map.zoomIn();
+        });
+
+        L.DomEvent.on(zoomOutBtn, 'click', function(e) {
+            L.DomEvent.preventDefault(e);
+            map.zoomOut();
+        });
+
+        return container;
+    },
+
+    onRemove: function(map) {
+        // クリーンアップは特に必要なし
+    }
+});
+
+// デフォルトのズームコントロールを削除し、カスタムズームコントロールを追加
+map.removeControl(map.zoomControl);
+new CustomZoomControl({ position: 'bottomright' }).addTo(map);
+
 // GeoJSONレイヤーグループ
 let geoJsonLayer = L.layerGroup().addTo(map);
 let loadedData = null;

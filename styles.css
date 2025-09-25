@@ -129,3 +129,39 @@ button:hover {
 .file-input-label:hover {
     background: #f0f0f0;
 }
+
+/* カスタムズームコントロールのスタイル */
+.leaflet-control-custom {
+    background: white;
+    border: 2px solid rgba(0,0,0,0.2);
+    border-radius: 4px;
+    margin-bottom: 10px !important;
+}
+
+.leaflet-control-custom a {
+    background: white;
+    color: #333;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: bold;
+    display: block;
+    border: none;
+}
+
+.leaflet-control-custom a:hover {
+    background: #f4f4f4;
+    color: #111;
+}
+
+.leaflet-control-custom a:first-child {
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    border-radius: 2px 2px 0 0;
+}
+
+.leaflet-control-custom a:last-child {
+    border-radius: 0 0 2px 2px;
+}
