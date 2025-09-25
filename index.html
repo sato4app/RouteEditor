@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地理院地図 GeoJSON入出力</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        #map {
+            height: 100vh;
+            width: 100vw;
+        }
+        
+        .control-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            min-width: 300px;
+        }
+        
+        .control-section {
+            margin-bottom: 15px;
+        }
+        
+        .control-section label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .control-section input[type="radio"] {
+            margin-right: 8px;
+        }
+        
+        .selected {
+            color: #007bff;
+            font-weight: bold;
+        }
+        
+        .geojson-panel {
+            border: 2px solid #666;
+            border-radius: 8px;
+            padding: 15px;
+            background: #f8f9fa;
+        }
+        
+        .geojson-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .geojson-controls {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .geojson-left {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .geojson-right {
+            flex: 1;
+        }
+        
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .stats-input {
+            width: 60px;
+            padding: 2px 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            text-align: right;
+        }
+        
+        button {
+            padding: 8px 16px;
+            border: 2px solid #666;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #f0f0f0;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .file-input-label {
+            display: inline-block;
+            padding: 8px 16px;
+            border: 2px solid #666;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .file-input-label:hover {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <div class="control-panel">
+        <div class="control-section">
+            <label>
+                <input type="radio" name="mode" value="geojson" checked>
+                <span class="selected">ファイルの入出力(GeoJSON)</span>
+            </label>
+            <label>
+                <input type="radio" name="mode" value="route">
+                ルートの位置編集
+            </label>
+            <label>
+                <input type="radio" name="mode" value="spot">
+                スポットの位置編集
+            </label>
+        </div>
+        
+        <div class="geojson-panel">
+            <div class="geojson-title">GeoJSONファイルの入出力</div>
+            
+            <div class="geojson-controls">
+                <div class="geojson-left">
+                    <label for="fileInput" class="file-input-label">読み込み</label>
+                    <input type="file" id="fileInput" accept=".geojson,.json" />
+                    <button id="exportBtn">出力</button>
+                </div>
+                
+                <div class="geojson-right">
+                    <div class="stats-row">
+                        <span>ファイル</span>
+                        <input type="text" class="stats-input" id="fileCount" readonly>
+                    </div>
+                    <div class="stats-row">
+                        <span>ポイント</span>
+                        <input type="text" class="stats-input" id="pointCount" readonly>
+                        <span>点</span>
+                    </div>
+                    <div class="stats-row">
+                        <span>ルート</span>
+                        <input type="text" class="stats-input" id="routeCount" readonly>
+                        <span>本</span>
+                    </div>
+                    <div class="stats-row">
+                        <span>スポット</span>
+                        <input type="text" class="stats-input" id="spotCount" readonly>
+                        <span>個</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <script>
+        // 地図の初期化（日本の中心付近）
+        const map = L.map('map').setView([35.6762, 139.6503], 10);
+        
+        // 地理院地図タイルの追加
+        L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
+            attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html">地理院タイル</a>',
+            maxZoom: 18
+        }).addTo(map);
+        
+        // GeoJSONレイヤーグループ
+        let geoJsonLayer = L.layerGroup().addTo(map);
+        let loadedData = null;
+        
+        // 統計情報の更新
+        function updateStats(geoJsonData) {
+            let pointCount = 0;
+            let lineCount = 0;
+            let polygonCount = 0;
+            
+            if (geoJsonData && geoJsonData.features) {
+                geoJsonData.features.forEach(feature => {
+                    switch (feature.geometry.type) {
+                        case 'Point':
+                            pointCount++;
+                            break;
+                        case 'LineString':
+                        case 'MultiLineString':
+                            lineCount++;
+                            break;
+                        case 'Polygon':
+                        case 'MultiPolygon':
+                            polygonCount++;
+                            break;
+                    }
+                });
+            }
+            
+            document.getElementById('fileCount').value = geoJsonData ? '1' : '0';
+            document.getElementById('pointCount').value = pointCount;
+            document.getElementById('routeCount').value = lineCount;
+            document.getElementById('spotCount').value = polygonCount;
+        }
+        
+        // ファイル読み込み処理
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const geoJsonData = JSON.parse(e.target.result);
+                        
+                        // 既存のレイヤーをクリア
+                        geoJsonLayer.clearLayers();
+                        
+                        // GeoJSONデータを地図に追加
+                        L.geoJSON(geoJsonData, {
+                            style: function(feature) {
+                                return {
+                                    color: '#3388ff',
+                                    weight: 3,
+                                    opacity: 0.8,
+                                    fillOpacity: 0.3
+                                };
+                            },
+                            pointToLayer: function(feature, latlng) {
+                                return L.circleMarker(latlng, {
+                                    radius: 6,
+                                    fillColor: '#ff7800',
+                                    color: '#000',
+                                    weight: 1,
+                                    opacity: 1,
+                                    fillOpacity: 0.8
+                                });
+                            },
+                            onEachFeature: function(feature, layer) {
+                                if (feature.properties && feature.properties.name) {
+                                    layer.bindPopup(feature.properties.name);
+                                }
+                            }
+                        }).addTo(geoJsonLayer);
+                        
+                        loadedData = geoJsonData;
+                        updateStats(geoJsonData);
+                        
+                        // データの範囲に地図をフィット
+                        const group = new L.featureGroup();
+                        geoJsonLayer.eachLayer(layer => group.addLayer(layer));
+                        if (group.getBounds().isValid()) {
+                            map.fitBounds(group.getBounds(), {padding: [10, 10]});
+                        }
+                        
+                        alert('GeoJSONファイルを読み込みました');
+                    } catch (error) {
+                        alert('ファイルの読み込みに失敗しました: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+        
+        // ファイル出力処理
+        document.getElementById('exportBtn').addEventListener('click', function() {
+            if (!loadedData) {
+                alert('出力するデータがありません。先にGeoJSONファイルを読み込んでください。');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(loadedData, null, 2);
+            const blob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'export.geojson';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('GeoJSONファイルを出力しました');
+        });
+        
+        // モード切り替え処理
+        document.querySelectorAll('input[name="mode"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                // 選択状態の表示更新
+                document.querySelectorAll('.control-section label span').forEach(span => {
+                    span.classList.remove('selected');
+                });
+                
+                if (this.checked) {
+                    this.nextElementSibling.classList.add('selected');
+                }
+            });
+        });
+        
+        // 初期統計表示
+        updateStats(null);
+    </script>
+</body>
+</html>
