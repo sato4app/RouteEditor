@@ -74,6 +74,7 @@ body {
 .stats-row {
     display: flex;
     align-items: center;
+    justify-content: flex-start;
     margin-bottom: 8px;
     font-size: 14px;
 }
@@ -84,14 +85,13 @@ body {
 }
 
 .stats-input {
-    width: 50px;
-    max-width: 50px;
+    width: 32px;
     padding: 2px 5px;
     border: 1px solid #ccc;
     border-radius: 3px;
     text-align: right;
-    font-family: monospace;
-    margin-left: auto;
+    background-color: #f8f9fa;
+    margin-left: 10px;
     margin-right: 5px;
 }
 
