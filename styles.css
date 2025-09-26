@@ -58,7 +58,7 @@ body {
 
 .geojson-controls {
     display: flex;
-    gap: 15px;
+    gap: 35px;
 }
 
 .geojson-left {
