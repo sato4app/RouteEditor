@@ -82,6 +82,7 @@ new CustomZoomControl({ position: 'bottomright' }).addTo(map);
 // GeoJSONレイヤーグループ
 let geoJsonLayer = L.layerGroup().addTo(map);
 let loadedData = null;
+let lastLoadedFileHandle = null; // File System Access API用のファイルハンドル
 
 // 統計情報の更新
 function updateStats(geoJsonData) {
@@ -149,9 +150,18 @@ function updateStats(geoJsonData) {
 }
 
 // ファイル読み込み処理
-document.getElementById('fileInput').addEventListener('change', function(e) {
+document.getElementById('fileInput').addEventListener('change', async function(e) {
     const file = e.target.files[0];
     if (file) {
+        // File System Access API対応: ファイルハンドルを保存
+        try {
+            if ('showOpenFilePicker' in window && file.handle) {
+                lastLoadedFileHandle = file.handle;
+            }
+        } catch (err) {
+            // File System Access APIが使えない場合は無視
+        }
+
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
@@ -228,20 +238,68 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
     }
 });
 
+// 日付文字列生成関数（yyyymmdd形式）
+function getDateString() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}${month}${day}`;
+}
+
 // ファイル出力処理
-document.getElementById('exportBtn').addEventListener('click', function() {
+document.getElementById('exportBtn').addEventListener('click', async function() {
     if (!loadedData) {
-        alert('出力するデータがありません。先にGeoJSONファイルを読み込んでください。');
+        showMessage('出力するデータがありません。先にGeoJSONファイルを読み込んでください。', 'warning');
         return;
     }
 
     const dataStr = JSON.stringify(loadedData, null, 2);
     const blob = new Blob([dataStr], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
+    const filename = `MapGPS-${getDateString()}.geojson`;
 
+    // File System Access APIが使える場合は、読み込んだフォルダに保存
+    if ('showSaveFilePicker' in window) {
+        try {
+            const options = {
+                suggestedName: filename,
+                types: [{
+                    description: 'GeoJSON Files',
+                    accept: {'application/json': ['.geojson', '.json']}
+                }]
+            };
+
+            // 読み込み時のディレクトリハンドルがあれば、同じディレクトリを開始場所にする
+            if (lastLoadedFileHandle) {
+                try {
+                    // ファイルハンドルから親ディレクトリを取得することはできないため、
+                    // ブラウザのデフォルト動作（最後に使用したフォルダ）に依存
+                } catch (err) {
+                    // 無視
+                }
+            }
+
+            const handle = await window.showSaveFilePicker(options);
+            const writable = await handle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+
+            showMessage('GeoJSONファイルを出力しました');
+            return;
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                // ユーザーがキャンセルした場合
+                return;
+            }
+            console.warn('File System Access API使用失敗、フォールバック:', err);
+        }
+    }
+
+    // フォールバック: 従来のダウンロード方式
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = DEFAULTS.EXPORT_FILENAME;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
