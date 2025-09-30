@@ -60,7 +60,7 @@ export const DEFAULTS = {
             opacity: 1,
             fillOpacity: 1
         },
-        // ルート中間点: オレンジ色(#ffa500)、菱形（ダイヤモンド型）、8x8px（枠なし）
+        // ルート中間点: 橙色(#f58220)、菱形（ダイヤモンド型）、8x8px（枠なし）
         'route_waypoint': {
             radius: 4,
             fillColor: '#f58220',

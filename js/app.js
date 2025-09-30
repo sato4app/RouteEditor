@@ -1,5 +1,29 @@
 import { DEFAULTS, MODES } from './constants.js';
 
+// メッセージ表示関数（タイプによって表示時間が異なる）
+function showMessage(message, type = 'success') {
+    // 既存のメッセージがあれば削除
+    const existingMsg = document.querySelector('.toast-message');
+    if (existingMsg) {
+        existingMsg.remove();
+    }
+
+    // メッセージ要素を作成
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `toast-message ${type}`;
+    msgDiv.textContent = message;
+    document.body.appendChild(msgDiv);
+
+    // タイプによって表示時間を変更
+    const displayTime = type === 'error' ? 6000 : type === 'warning' ? 4500 : 3000;
+
+    // 指定時間後に削除
+    setTimeout(() => {
+        msgDiv.classList.add('fade-out');
+        setTimeout(() => msgDiv.remove(), 300);
+    }, displayTime);
+}
+
 // 地図の初期化
 const map = L.map('map').setView(DEFAULTS.MAP_CENTER, DEFAULTS.MAP_ZOOM);
 
@@ -151,8 +175,6 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
                         const featureType = feature.properties && feature.properties.type;
                         const style = DEFAULTS.FEATURE_STYLES[featureType] || DEFAULTS.POINT_STYLE;
 
-                        
-
                         // 形状に基づいてマーカーを作成
                         if (style.shape === 'diamond') {
                             // 菱形（ダイヤモンド型）マーカー
@@ -196,9 +218,9 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
                     map.fitBounds(group.getBounds(), {padding: [10, 10]});
                 }
 
-                alert('GeoJSONファイルを読み込みました');
+                showMessage('GeoJSONファイルを読み込みました');
             } catch (error) {
-                alert('ファイルの読み込みに失敗しました: ' + error.message);
+                showMessage('ファイルの読み込みに失敗しました: ' + error.message, 'error');
             }
         };
         
@@ -225,7 +247,7 @@ document.getElementById('exportBtn').addEventListener('click', function() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    alert('GeoJSONファイルを出力しました');
+    showMessage('GeoJSONファイルを出力しました');
 });
 
 // モード切り替え処理
