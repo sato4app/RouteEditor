@@ -65,6 +65,7 @@ function updateStats(geoJsonData) {
     let waypointCount = 0;   // ルート中間点
     let spotCount = 0;       // スポット
     let polygonCount = 0;    // ポリゴン
+    const waypointRouteIdSet = new Set(); // ルートID収集（中間点から補完）
 
     // 再帰的にLineString/MultiLineStringを数える
     function countRoutes(obj) {
@@ -96,6 +97,8 @@ function updateStats(geoJsonData) {
                     pointCount++;
                 } else if (featureType === 'route_waypoint') {
                     waypointCount++;
+                    const rid = feature.properties && feature.properties.route_id;
+                    if (rid) waypointRouteIdSet.add(rid);
                 } else if (featureType === 'spot') {
                     spotCount++;
                 } else {
@@ -110,10 +113,13 @@ function updateStats(geoJsonData) {
         });
     }
 
+    const lineBasedRouteCount = countRoutes(geoJsonData);
+    const routeCount = lineBasedRouteCount > 0 ? lineBasedRouteCount : waypointRouteIdSet.size;
+
     document.getElementById('fileCount').value = geoJsonData ? '1' : '0';
     document.getElementById('pointCount').value = pointCount;
-    // ルートカウントはLineString/MultiLineStringの本数（ネスト対応）
-    document.getElementById('routeCount').value = countRoutes(geoJsonData);
+    // ルートカウントはLineString/MultiLineStringの本数。無ければ中間点のroute_idユニーク数
+    document.getElementById('routeCount').value = routeCount;
     // スポットカウントはスポットポイントとポリゴンの合計
     document.getElementById('spotCount').value = spotCount + polygonCount;
 }
