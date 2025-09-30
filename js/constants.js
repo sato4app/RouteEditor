@@ -33,8 +33,8 @@ export const DEFAULTS = {
     // スタイル設定
     POINT_STYLE: {
         radius: 8,
-        fillColor: '#008000',
-        color: '#008000',
+        fillColor: '#006400',
+        color: '#006400',
         weight: 0,
         stroke: false,
         opacity: 1,
@@ -53,8 +53,8 @@ export const DEFAULTS = {
         // ポイントGPS: 緑色、円形、半径8px（枠なし）
         'ポイントGPS': {
             radius: 8,
-            fillColor: '#008000',
-            color: '#008000',
+            fillColor: '#006400',
+            color: '#006400',
             weight: 0,
             stroke: false,
             opacity: 1,
