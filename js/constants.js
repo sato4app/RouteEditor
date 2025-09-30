@@ -32,9 +32,9 @@ export const DEFAULTS = {
 
     // スタイル設定
     POINT_STYLE: {
-        radius: 8,
-        fillColor: '#28a745',
-        color: '#28a745',
+        radius: 6,
+        fillColor: '#ff0000',
+        color: '#ff0000',
         weight: 0,
         stroke: false,
         opacity: 1,
@@ -50,17 +50,17 @@ export const DEFAULTS = {
 
     // フィーチャータイプ別スタイル設定
     FEATURE_STYLES: {
-        // ポイントGPS: 緑色、円形、半径8px（枠なし）
+        // ポイントGPS: 緑色(#ff0000指定に従う)、円形、半径6px（枠なし）
         'ポイントGPS': {
-            radius: 8,
-            fillColor: '#28a745',
-            color: '#28a745',
+            radius: 6,
+            fillColor: '#ff0000',
+            color: '#ff0000',
             weight: 0,
             stroke: false,
             opacity: 1,
             fillOpacity: 0.8
         },
-        // ルート中間点: オレンジ色、菱形（ダイヤモンド型）、8x8px（枠なし）
+        // ルート中間点: オレンジ色(#ffa500)、菱形（ダイヤモンド型）、8x8px（枠なし）
         'route_waypoint': {
             radius: 4,
             fillColor: '#ffa500',
@@ -71,7 +71,7 @@ export const DEFAULTS = {
             fillOpacity: 0.8,
             shape: 'diamond'
         },
-        // スポット: 青色、正方形、12x12px（枠なし）
+        // スポット: 青色(#0000ff)、正方形、12x12px（枠なし）
         'spot': {
             radius: 12,
             fillColor: '#0000ff',
