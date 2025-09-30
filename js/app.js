@@ -195,6 +195,7 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
                 alert('ファイルの読み込みに失敗しました: ' + error.message);
             }
         };
+        
         reader.readAsText(file);
     }
 });
