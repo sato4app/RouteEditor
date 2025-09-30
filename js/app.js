@@ -98,8 +98,8 @@ function updateStats(geoJsonData) {
 
     document.getElementById('fileCount').value = geoJsonData ? '1' : '0';
     document.getElementById('pointCount').value = pointCount;
-    // ルートカウントは中間点とLineStringの合計
-    document.getElementById('routeCount').value = waypointCount + lineCount;
+    // ルートカウントはLineString（ルート本数）のみ
+    document.getElementById('routeCount').value = lineCount;
     // スポットカウントはスポットポイントとポリゴンの合計
     document.getElementById('spotCount').value = spotCount + polygonCount;
 }
