@@ -119,8 +119,13 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
                 // GeoJSONデータを地図に追加
                 console.log('[geojson] start add to map');
                 L.geoJSON(geoJsonData, {
+                    // 線のみスタイル適用（ポイントには適用しない）
                     style: function(feature) {
-                        return DEFAULTS.LINE_STYLE;
+                        const type = feature && feature.geometry && feature.geometry.type;
+                        if (type === 'LineString' || type === 'MultiLineString' || type === 'Polygon' || type === 'MultiPolygon') {
+                            return DEFAULTS.LINE_STYLE;
+                        }
+                        return undefined;
                     },
                     pointToLayer: function(feature, latlng) {
                         console.log('[geojson] pointToLayer called');
