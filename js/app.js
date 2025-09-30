@@ -117,7 +117,6 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
                 geoJsonLayer.clearLayers();
 
                 // GeoJSONデータを地図に追加
-                console.log('[geojson] start add to map');
                 L.geoJSON(geoJsonData, {
                     // 線のみスタイル適用（ポイントには適用しない）
                     style: function(feature) {
@@ -128,22 +127,11 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
                         return undefined;
                     },
                     pointToLayer: function(feature, latlng) {
-                        console.log('[geojson] pointToLayer called');
                         // フィーチャータイプに基づいてスタイルを選択
                         const featureType = feature.properties && feature.properties.type;
                         const style = DEFAULTS.FEATURE_STYLES[featureType] || DEFAULTS.POINT_STYLE;
 
-                        // デバッグ: 適用タイプと色/不透明度を確認
-                        try {
-                            console.log('[pointToLayer]', {
-                                featureType,
-                                shape: style.shape || 'circle',
-                                fillColor: style.fillColor,
-                                fillOpacity: style.fillOpacity,
-                                stroke: style.stroke,
-                                weight: style.weight
-                            });
-                        } catch (e) {}
+                        
 
                         // 形状に基づいてマーカーを作成
                         if (style.shape === 'diamond') {

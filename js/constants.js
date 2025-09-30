@@ -50,11 +50,11 @@ export const DEFAULTS = {
 
     // フィーチャータイプ別スタイル設定
     FEATURE_STYLES: {
-        // ポイントGPS: 濃い緑(#006400)、円形、半径6px（枠なし）
+        // ポイントGPS: 緑(#008000)、円形、半径6px（枠なし）
         'ポイントGPS': {
             radius: 6,
-            fillColor: '#006400',
-            color: '#006400',
+            fillColor: '#008000',
+            color: '#008000',
             weight: 0,
             stroke: false,
             opacity: 1,
