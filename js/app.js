@@ -64,13 +64,31 @@ function updateStats(geoJsonData) {
     let pointCount = 0;      // ポイントGPS
     let waypointCount = 0;   // ルート中間点
     let spotCount = 0;       // スポット
-    let lineCount = 0;       // ルート（LineString）
     let polygonCount = 0;    // ポリゴン
+
+    // 再帰的にLineString/MultiLineStringを数える
+    function countRoutes(obj) {
+        if (!obj) return 0;
+        const t = obj.type;
+        if (t === 'FeatureCollection' && Array.isArray(obj.features)) {
+            return obj.features.reduce((sum, f) => sum + countRoutes(f), 0);
+        }
+        if (t === 'Feature') {
+            return countRoutes(obj.geometry);
+        }
+        if (t === 'GeometryCollection' && Array.isArray(obj.geometries)) {
+            return obj.geometries.reduce((sum, g) => sum + countRoutes(g), 0);
+        }
+        if (t === 'LineString' || t === 'MultiLineString') {
+            return 1;
+        }
+        return 0;
+    }
 
     if (geoJsonData && geoJsonData.features) {
         geoJsonData.features.forEach(feature => {
             const featureType = feature.properties && feature.properties.type;
-            const geometryType = feature.geometry.type;
+            const geometryType = feature.geometry && feature.geometry.type;
 
             // Pointの場合はプロパティのtypeで分類
             if (geometryType === 'Point') {
@@ -85,10 +103,6 @@ function updateStats(geoJsonData) {
                     pointCount++;
                 }
             }
-            // LineStringはルートとしてカウント
-            else if (geometryType === 'LineString' || geometryType === 'MultiLineString') {
-                lineCount++;
-            }
             // Polygonはスポットまたはポリゴンとしてカウント
             else if (geometryType === 'Polygon' || geometryType === 'MultiPolygon') {
                 polygonCount++;
@@ -98,8 +112,8 @@ function updateStats(geoJsonData) {
 
     document.getElementById('fileCount').value = geoJsonData ? '1' : '0';
     document.getElementById('pointCount').value = pointCount;
-    // ルートカウントはLineString（ルート本数）のみ
-    document.getElementById('routeCount').value = lineCount;
+    // ルートカウントはLineString/MultiLineStringの本数（ネスト対応）
+    document.getElementById('routeCount').value = countRoutes(geoJsonData);
     // スポットカウントはスポットポイントとポリゴンの合計
     document.getElementById('spotCount').value = spotCount + polygonCount;
 }
