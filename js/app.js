@@ -108,7 +108,35 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
                         return DEFAULTS.LINE_STYLE;
                     },
                     pointToLayer: function(feature, latlng) {
-                        return L.circleMarker(latlng, DEFAULTS.POINT_STYLE);
+                        // フィーチャータイプに基づいてスタイルを選択
+                        const featureType = feature.properties && feature.properties.type;
+                        const style = DEFAULTS.FEATURE_STYLES[featureType] || DEFAULTS.POINT_STYLE;
+
+                        // 形状に基づいてマーカーを作成
+                        if (style.shape === 'diamond') {
+                            // 菱形（ダイヤモンド型）マーカー
+                            return L.marker(latlng, {
+                                icon: L.divIcon({
+                                    className: 'diamond-marker',
+                                    html: `<div style="width: ${style.radius * 2}px; height: ${style.radius * 2}px; background-color: ${style.fillColor}; border: ${style.weight}px solid ${style.color}; transform: rotate(45deg); opacity: ${style.fillOpacity};"></div>`,
+                                    iconSize: [style.radius * 2, style.radius * 2],
+                                    iconAnchor: [style.radius, style.radius]
+                                })
+                            });
+                        } else if (style.shape === 'square') {
+                            // 正方形マーカー
+                            return L.marker(latlng, {
+                                icon: L.divIcon({
+                                    className: 'square-marker',
+                                    html: `<div style="width: ${style.radius}px; height: ${style.radius}px; background-color: ${style.fillColor}; border: ${style.weight}px solid ${style.color}; opacity: ${style.fillOpacity};"></div>`,
+                                    iconSize: [style.radius, style.radius],
+                                    iconAnchor: [style.radius / 2, style.radius / 2]
+                                })
+                            });
+                        } else {
+                            // デフォルトの円形マーカー
+                            return L.circleMarker(latlng, style);
+                        }
                     },
                     onEachFeature: function(feature, layer) {
                         if (feature.properties && feature.properties.name) {

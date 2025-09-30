@@ -47,6 +47,39 @@ export const DEFAULTS = {
         fillOpacity: 0.3
     },
 
+    // フィーチャータイプ別スタイル設定
+    FEATURE_STYLES: {
+        // ポイントGPS: 緑色、円形、半径8px
+        'ポイントGPS': {
+            radius: 8,
+            fillColor: '#008000',
+            color: '#000',
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8
+        },
+        // ルート中間点: オレンジ色、菱形（ダイヤモンド型）、8x8px
+        'route_waypoint': {
+            radius: 8,
+            fillColor: '#ffa500',
+            color: '#000',
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8,
+            shape: 'diamond'
+        },
+        // スポット: 青色、正方形、12x12px
+        'spot': {
+            radius: 12,
+            fillColor: '#0000ff',
+            color: '#000',
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8,
+            shape: 'square'
+        }
+    },
+
     // ファイル設定
     SUPPORTED_FILE_TYPES: ['.geojson', '.json'],
     EXPORT_FILENAME: 'export.geojson',
