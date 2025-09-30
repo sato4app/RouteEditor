@@ -43,7 +43,6 @@ const CustomZoomControl = L.Control.extend({
             L.DomEvent.preventDefault(e);
             map.zoomOut();
         });
-
         return container;
     },
 
