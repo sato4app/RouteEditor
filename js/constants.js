@@ -33,8 +33,8 @@ export const DEFAULTS = {
     // スタイル設定
     POINT_STYLE: {
         radius: 6,
-        fillColor: '#006d4d',
-        color: '#006d4d',
+        fillColor: '#008000',
+        color: '#008000',
         weight: 0,
         stroke: false,
         opacity: 1,
@@ -50,11 +50,11 @@ export const DEFAULTS = {
 
     // フィーチャータイプ別スタイル設定
     FEATURE_STYLES: {
-        // ポイントGPS: 緑色(#ff0000指定に従う)、円形、半径6px（枠なし）
+        // ポイントGPS: 緑色(#008000指定に従う)、円形、半径6px（枠なし）
         'ポイントGPS': {
             radius: 6,
-            fillColor: '#006d4d',
-            color: '#006d4d',
+            fillColor: '#008000',
+            color: '#008000',
             weight: 0,
             stroke: false,
             opacity: 1,
