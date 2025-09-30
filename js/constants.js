@@ -38,7 +38,7 @@ export const DEFAULTS = {
         weight: 0,
         stroke: false,
         opacity: 1,
-        fillOpacity: 0.8
+        fillOpacity: 1
     },
 
     LINE_STYLE: {
@@ -58,7 +58,7 @@ export const DEFAULTS = {
             weight: 0,
             stroke: false,
             opacity: 1,
-            fillOpacity: 0.8
+            fillOpacity: 1
         },
         // ルート中間点: オレンジ色(#ffa500)、菱形（ダイヤモンド型）、8x8px（枠なし）
         'route_waypoint': {
