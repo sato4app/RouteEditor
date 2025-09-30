@@ -169,18 +169,18 @@ button:hover {
 /* トーストメッセージのスタイル */
 .toast-message {
     position: fixed;
-    top: 20px;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
-    background: #28a745;
-    color: white;
+    transform: translate(-50%, -50%);
+    background: #d1ecf1;
+    color: #0c5460;
     padding: 12px 24px;
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     z-index: 10000;
     font-size: 14px;
     font-weight: 500;
-    animation: slideDown 0.3s ease;
+    animation: fadeIn 0.3s ease;
 }
 
 .toast-message.warning {
@@ -197,13 +197,13 @@ button:hover {
     opacity: 0;
 }
 
-@keyframes slideDown {
+@keyframes fadeIn {
     from {
-        transform: translateX(-50%) translateY(-20px);
+        transform: translate(-50%, -50%) scale(0.9);
         opacity: 0;
     }
     to {
-        transform: translateX(-50%) translateY(0);
+        transform: translate(-50%, -50%) scale(1);
         opacity: 1;
     }
 }
