@@ -117,18 +117,20 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
                 geoJsonLayer.clearLayers();
 
                 // GeoJSONデータを地図に追加
+                console.log('[geojson] start add to map');
                 L.geoJSON(geoJsonData, {
                     style: function(feature) {
                         return DEFAULTS.LINE_STYLE;
                     },
                     pointToLayer: function(feature, latlng) {
+                        console.log('[geojson] pointToLayer called');
                         // フィーチャータイプに基づいてスタイルを選択
                         const featureType = feature.properties && feature.properties.type;
                         const style = DEFAULTS.FEATURE_STYLES[featureType] || DEFAULTS.POINT_STYLE;
 
                         // デバッグ: 適用タイプと色/不透明度を確認
                         try {
-                            console.debug('[pointToLayer]', {
+                            console.log('[pointToLayer]', {
                                 featureType,
                                 shape: style.shape || 'circle',
                                 fillColor: style.fillColor,
