@@ -133,7 +133,7 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
                             return L.marker(latlng, {
                                 icon: L.divIcon({
                                     className: 'diamond-marker',
-                                    html: `<div style="width: ${style.radius * 2}px; height: ${style.radius * 2}px; background-color: ${style.fillColor}; border: ${style.weight}px solid ${style.color}; transform: rotate(45deg); opacity: ${style.fillOpacity};"></div>`,
+                                    html: `<div style="width: ${style.radius * 2}px; height: ${style.radius * 2}px; background-color: ${style.fillColor}; transform: rotate(45deg); opacity: ${style.fillOpacity};"></div>`,
                                     iconSize: [style.radius * 2, style.radius * 2],
                                     iconAnchor: [style.radius, style.radius]
                                 })
@@ -143,7 +143,7 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
                             return L.marker(latlng, {
                                 icon: L.divIcon({
                                     className: 'square-marker',
-                                    html: `<div style="width: ${style.radius}px; height: ${style.radius}px; background-color: ${style.fillColor}; border: ${style.weight}px solid ${style.color}; opacity: ${style.fillOpacity};"></div>`,
+                                    html: `<div style="width: ${style.radius}px; height: ${style.radius}px; background-color: ${style.fillColor}; opacity: ${style.fillOpacity};"></div>`,
                                     iconSize: [style.radius, style.radius],
                                     iconAnchor: [style.radius / 2, style.radius / 2]
                                 })
