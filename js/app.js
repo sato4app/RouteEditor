@@ -62,32 +62,47 @@ let loadedData = null;
 
 // 統計情報の更新
 function updateStats(geoJsonData) {
-    let pointCount = 0;
-    let lineCount = 0;
-    let polygonCount = 0;
+    let pointCount = 0;      // ポイントGPS
+    let waypointCount = 0;   // ルート中間点
+    let spotCount = 0;       // スポット
+    let lineCount = 0;       // ルート（LineString）
+    let polygonCount = 0;    // ポリゴン
 
     if (geoJsonData && geoJsonData.features) {
         geoJsonData.features.forEach(feature => {
-            switch (feature.geometry.type) {
-                case 'Point':
+            const featureType = feature.properties && feature.properties.type;
+            const geometryType = feature.geometry.type;
+
+            // Pointの場合はプロパティのtypeで分類
+            if (geometryType === 'Point') {
+                if (featureType === 'ポイントGPS') {
                     pointCount++;
-                    break;
-                case 'LineString':
-                case 'MultiLineString':
-                    lineCount++;
-                    break;
-                case 'Polygon':
-                case 'MultiPolygon':
-                    polygonCount++;
-                    break;
+                } else if (featureType === 'route_waypoint') {
+                    waypointCount++;
+                } else if (featureType === 'spot') {
+                    spotCount++;
+                } else {
+                    // typeが指定されていない場合はポイントとしてカウント
+                    pointCount++;
+                }
+            }
+            // LineStringはルートとしてカウント
+            else if (geometryType === 'LineString' || geometryType === 'MultiLineString') {
+                lineCount++;
+            }
+            // Polygonはスポットまたはポリゴンとしてカウント
+            else if (geometryType === 'Polygon' || geometryType === 'MultiPolygon') {
+                polygonCount++;
             }
         });
     }
 
     document.getElementById('fileCount').value = geoJsonData ? '1' : '0';
     document.getElementById('pointCount').value = pointCount;
-    document.getElementById('routeCount').value = lineCount;
-    document.getElementById('spotCount').value = polygonCount;
+    // ルートカウントは中間点とLineStringの合計
+    document.getElementById('routeCount').value = waypointCount + lineCount;
+    // スポットカウントはスポットポイントとポリゴンの合計
+    document.getElementById('spotCount').value = spotCount + polygonCount;
 }
 
 // ファイル読み込み処理
