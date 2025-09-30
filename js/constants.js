@@ -62,7 +62,7 @@ export const DEFAULTS = {
         },
         // ルート中間点: オレンジ色、菱形（ダイヤモンド型）、8x8px（枠なし）
         'route_waypoint': {
-            radius: 2,
+            radius: 4,
             fillColor: '#ffa500',
             color: '#ffa500',
             weight: 0,
