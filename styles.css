@@ -116,6 +116,117 @@ button:hover {
     display: none;
 }
 
+/* ルート編集パネル */
+.route-panel {
+    border: 2px solid #999;
+    border-radius: 8px;
+    padding: 20px;
+    background: white;
+}
+
+.route-title {
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.route-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.route-label {
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.route-dropdown {
+    flex: 1;
+    padding: 6px 8px;
+    font-size: 14px;
+    border: 2px solid #333;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=UTF-8,<svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L6 6L11 1" stroke="%23333" stroke-width="2" stroke-linecap="round"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 28px;
+    min-width: 50px;
+}
+
+.route-dropdown:focus {
+    outline: none;
+    border-color: #0066cc;
+}
+
+.route-separator {
+    font-size: 14px;
+}
+
+.route-path {
+    margin-bottom: 20px;
+}
+
+.route-path-dropdown {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 14px;
+    border: 2px solid #333;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=UTF-8,<svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L6 6L11 1" stroke="%23333" stroke-width="2" stroke-linecap="round"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 32px;
+}
+
+.route-path-dropdown:focus {
+    outline: none;
+    border-color: #0066cc;
+}
+
+.route-buttons {
+    border: 2px solid #999;
+    border-radius: 6px;
+    padding: 15px;
+}
+
+.route-button-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.route-button-row:last-child {
+    margin-bottom: 0;
+}
+
+.route-btn {
+    flex: 1;
+    padding: 10px 16px;
+    font-size: 15px;
+    border: 2px solid #333;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.route-btn:hover {
+    background-color: #f0f0f0;
+}
+
+.route-btn:active {
+    transform: translateY(1px);
+}
+
 .file-input-label {
     display: inline-block;
     padding: 8px 16px;

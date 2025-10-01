@@ -319,7 +319,70 @@ document.querySelectorAll('input[name="mode"]').forEach(radio => {
         if (this.checked) {
             this.nextElementSibling.classList.add('selected');
         }
+
+        // パネルの表示切り替え
+        const geojsonPanel = document.getElementById('geojsonPanel');
+        const routePanel = document.getElementById('routePanel');
+
+        if (this.value === MODES.GEOJSON) {
+            geojsonPanel.style.display = 'block';
+            routePanel.style.display = 'none';
+        } else if (this.value === MODES.ROUTE) {
+            geojsonPanel.style.display = 'none';
+            routePanel.style.display = 'block';
+        } else if (this.value === MODES.SPOT) {
+            geojsonPanel.style.display = 'none';
+            routePanel.style.display = 'none';
+        }
     });
+});
+
+// ルート編集モードのイベントハンドラー
+document.getElementById('addRouteBtn').addEventListener('click', function() {
+    const start = document.getElementById('routeStart').value;
+    const end = document.getElementById('routeEnd').value;
+    const path = document.getElementById('routePath').value;
+
+    if (!start || !end) {
+        showMessage('始点と終点を選択してください', 'warning');
+        return;
+    }
+
+    console.log('ルート追加:', { start, end, path });
+    showMessage('ルートを追加しました');
+});
+
+document.getElementById('moveRouteBtn').addEventListener('click', function() {
+    console.log('ルート移動');
+    showMessage('ルートを移動しました');
+});
+
+document.getElementById('deleteRouteBtn').addEventListener('click', function() {
+    const path = document.getElementById('routePath').value;
+    if (!path) {
+        showMessage('削除する経路を選択してください', 'warning');
+        return;
+    }
+
+    if (confirm('選択した経路を削除しますか？')) {
+        console.log('ルート削除:', path);
+        showMessage('ルートを削除しました');
+    }
+});
+
+document.getElementById('optimizeRouteBtn').addEventListener('click', function() {
+    console.log('ルート最適化');
+    showMessage('ルートを最適化しました');
+});
+
+document.getElementById('clearRouteBtn').addEventListener('click', function() {
+    if (confirm('すべての選択をクリアしますか？')) {
+        document.getElementById('routeStart').value = '';
+        document.getElementById('routeEnd').value = '';
+        document.getElementById('routePath').value = '';
+        console.log('ルートクリア');
+        showMessage('クリアしました');
+    }
 });
 
 // 初期統計表示

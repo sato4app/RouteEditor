@@ -28,16 +28,16 @@
             </label>
         </div>
         
-        <div class="geojson-panel">
+        <div class="geojson-panel" id="geojsonPanel">
             <div class="geojson-title">GeoJSONファイルの入出力</div>
-            
+
             <div class="geojson-controls">
                 <div class="geojson-left">
                     <label for="fileInput" class="file-input-label">読み込み</label>
                     <input type="file" id="fileInput" accept=".geojson,.json" />
                     <button id="exportBtn">出力</button>
                 </div>
-                
+
                 <div class="geojson-right">
                     <div class="stats-row">
                         <span>ファイル</span>
@@ -58,6 +58,39 @@
                         <input type="text" class="stats-input" id="spotCount" readonly>
                         <span>個</span>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="route-panel" id="routePanel" style="display: none;">
+            <div class="route-title">ルート詳細情報</div>
+
+            <div class="route-selector">
+                <span class="route-label">ルート</span>
+                <select class="route-dropdown" id="routeStart">
+                    <option value="">選択</option>
+                </select>
+                <span class="route-separator">ー</span>
+                <select class="route-dropdown" id="routeEnd">
+                    <option value="">選択</option>
+                </select>
+            </div>
+
+            <div class="route-path">
+                <select class="route-path-dropdown" id="routePath">
+                    <option value="">経路を選択してください</option>
+                </select>
+            </div>
+
+            <div class="route-buttons">
+                <div class="route-button-row">
+                    <button class="route-btn" id="addRouteBtn">追加</button>
+                    <button class="route-btn" id="moveRouteBtn">移動</button>
+                    <button class="route-btn" id="deleteRouteBtn">削除</button>
+                </div>
+                <div class="route-button-row">
+                    <button class="route-btn" id="optimizeRouteBtn">最適化</button>
+                    <button class="route-btn" id="clearRouteBtn">クリア</button>
                 </div>
             </div>
         </div>

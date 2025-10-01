@@ -109,7 +109,10 @@ export const CSS_CLASSES = {
     ERROR: 'error',
     WARNING: 'warning',
     SUCCESS: 'success',
-    VISUALLY_HIDDEN: 'visually-hidden'
+    VISUALLY_HIDDEN: 'visually-hidden',
+    ROUTE_PANEL: 'route-panel',
+    ROUTE_BTN: 'route-btn',
+    GEOJSON_PANEL: 'geojson-panel'
 };
 
 // モード定数
