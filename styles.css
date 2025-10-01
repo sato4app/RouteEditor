@@ -82,6 +82,7 @@ body {
 .stats-row span:first-child {
     text-align: left;
     min-width: 60px;
+    margin-left: 20px;
 }
 
 .stats-input {
