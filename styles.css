@@ -100,12 +100,12 @@ body {
 }
 
 button {
-    padding: 8px 16px;
+    padding: 4px 8px;
     border: 2px solid #666;
     border-radius: 4px;
     background: white;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 12px;
 }
 
 button:hover {
@@ -229,12 +229,12 @@ button:hover {
 
 .file-input-label {
     display: inline-block;
-    padding: 8px 16px;
+    padding: 4px 8px;
     border: 2px solid #666;
     border-radius: 4px;
     background: white;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .file-input-label:hover {
