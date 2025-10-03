@@ -83,6 +83,125 @@ new CustomZoomControl({ position: 'bottomright' }).addTo(map);
 let geoJsonLayer = L.layerGroup().addTo(map);
 let loadedData = null;
 let lastLoadedFileHandle = null; // File System Access API用のファイルハンドル
+let allPoints = []; // 全ポイントのリスト
+let allRoutes = []; // 全ルートのリスト（開始点～終了点のペア）
+
+// ポイントとルートの抽出
+function extractPointsAndRoutes(geoJsonData) {
+    allPoints = [];
+    allRoutes = [];
+
+    if (!geoJsonData || !geoJsonData.features) {
+        return;
+    }
+
+    const routeIdSet = new Set(); // route_idのセット
+
+    // ルート中間点からroute_idを収集
+    geoJsonData.features.forEach(feature => {
+        const featureType = feature.properties && feature.properties.type;
+        const geometryType = feature.geometry && feature.geometry.type;
+
+        if (geometryType === 'Point' && featureType === 'route_waypoint') {
+            const routeId = feature.properties && feature.properties.route_id;
+            if (routeId) {
+                routeIdSet.add(routeId);
+            }
+        }
+    });
+
+    // route_idからルートを構築
+    routeIdSet.forEach(routeId => {
+        // route_idの形式: "route_開始ポイントID_to_終了ポイントID"
+        // 例: "route_C-03_to_J-01"
+        const match = routeId.match(/^route_(.+)_to_(.+)$/);
+        if (match) {
+            const startId = match[1];
+            const endId = match[2];
+
+            allRoutes.push({
+                routeId: routeId,          // route_id全体
+                startId: startId,          // 開始ポイントID（例: "C-03"）
+                endId: endId               // 終了ポイントID（例: "J-01"）
+            });
+        }
+    });
+}
+
+// ドロップダウンの更新
+function updateDropdowns() {
+    const routeStartSelect = document.getElementById('routeStart');
+    const routeEndSelect = document.getElementById('routeEnd');
+    const routePathSelect = document.getElementById('routePath');
+
+    // 全ルートの開始点と終了点のIDを収集
+    const allRoutePointIds = [];
+    allRoutes.forEach(route => {
+        allRoutePointIds.push(route.startId);
+        allRoutePointIds.push(route.endId);
+    });
+
+    // ユニークにしてソート
+    const uniqueRoutePointIds = [...new Set(allRoutePointIds)].sort();
+
+    // 絞り込みドロップダウン（短い方）: IDの1文字目のみ
+    routeStartSelect.innerHTML = '<option value="">選択</option>';
+    const firstChars = [...new Set(uniqueRoutePointIds.map(id => id.charAt(0)))].sort();
+    firstChars.forEach(char => {
+        const option = document.createElement('option');
+        option.value = char;
+        option.textContent = char;
+        routeStartSelect.appendChild(option);
+    });
+
+    // 絞り込みドロップダウン（長い方）: 完全なID
+    routeEndSelect.innerHTML = '<option value="">選択</option>';
+    uniqueRoutePointIds.forEach(id => {
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = id;
+        routeEndSelect.appendChild(option);
+    });
+
+    // ルートドロップダウンを更新
+    updateRouteDropdown();
+}
+
+// ルートドロップダウンの更新（絞り込みに応じて）
+function updateRouteDropdown() {
+    const routeStartSelect = document.getElementById('routeStart');
+    const routeEndSelect = document.getElementById('routeEnd');
+    const routePathSelect = document.getElementById('routePath');
+
+    const startCharFilter = routeStartSelect.value; // 1文字フィルター（ID）
+    const endIdFilter = routeEndSelect.value;       // 完全なIDフィルター
+
+    // フィルタリング
+    let filteredRoutes = allRoutes;
+
+    // 1文字目でフィルタリング（開始点または終了点のIDの1文字目が一致）
+    if (startCharFilter) {
+        filteredRoutes = filteredRoutes.filter(r =>
+            r.startId.charAt(0) === startCharFilter || r.endId.charAt(0) === startCharFilter
+        );
+    }
+
+    // 完全なIDでフィルタリング（開始点または終了点のIDが一致）
+    if (endIdFilter) {
+        filteredRoutes = filteredRoutes.filter(r =>
+            r.startId === endIdFilter || r.endId === endIdFilter
+        );
+    }
+
+    // ルートドロップダウンを再構築
+    routePathSelect.innerHTML = '<option value="">開始ポイント ～ 終了ポイント</option>';
+    filteredRoutes.forEach(route => {
+        const option = document.createElement('option');
+        option.value = route.routeId;
+        option.textContent = `${route.startId} ～ ${route.endId}`;  // IDのみ表示
+        routePathSelect.appendChild(option);
+    });
+}
 
 // 統計情報の更新
 function updateStats(geoJsonData) {
@@ -220,6 +339,8 @@ document.getElementById('fileInput').addEventListener('change', async function(e
 
                 loadedData = geoJsonData;
                 updateStats(geoJsonData);
+                extractPointsAndRoutes(geoJsonData);
+                updateDropdowns();
 
                 // データの範囲に地図をフィット
                 const group = new L.featureGroup();
@@ -335,6 +456,15 @@ document.querySelectorAll('input[name="mode"]').forEach(radio => {
             routePanel.style.display = 'none';
         }
     });
+});
+
+// 絞り込みドロップダウンの変更イベントリスナー
+document.getElementById('routeStart').addEventListener('change', function() {
+    updateRouteDropdown();
+});
+
+document.getElementById('routeEnd').addEventListener('change', function() {
+    updateRouteDropdown();
 });
 
 // ルート編集モードのイベントハンドラー
