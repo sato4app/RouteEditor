@@ -164,16 +164,59 @@ button:hover {
     border-color: #0066cc;
 }
 
+.route-dropdown-short {
+    width: 1em;
+    padding: 6px 8px;
+    font-size: 12px;
+    border: 2px solid #333;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=UTF-8,<svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L6 6L11 1" stroke="%23333" stroke-width="2" stroke-linecap="round"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 28px;
+}
+
+.route-dropdown-short:focus {
+    outline: none;
+    border-color: #0066cc;
+}
+
+.route-dropdown-long {
+    width: 5em;
+    padding: 6px 8px;
+    font-size: 12px;
+    border: 2px solid #333;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=UTF-8,<svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L6 6L11 1" stroke="%23333" stroke-width="2" stroke-linecap="round"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 28px;
+}
+
+.route-dropdown-long:focus {
+    outline: none;
+    border-color: #0066cc;
+}
+
 .route-separator {
     font-size: 12px;
 }
 
 .route-path {
     margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .route-path-dropdown {
-    width: 100%;
+    flex: 1;
     padding: 8px 10px;
     font-size: 12px;
     border: 2px solid #333;
