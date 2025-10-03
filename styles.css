@@ -139,14 +139,14 @@ button:hover {
 }
 
 .route-label {
-    font-size: 14px;
+    font-size: 12px;
     white-space: nowrap;
 }
 
 .route-dropdown {
     flex: 1;
     padding: 6px 8px;
-    font-size: 14px;
+    font-size: 12px;
     border: 2px solid #333;
     border-radius: 4px;
     background-color: white;
@@ -165,7 +165,7 @@ button:hover {
 }
 
 .route-separator {
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .route-path {
@@ -175,7 +175,7 @@ button:hover {
 .route-path-dropdown {
     width: 100%;
     padding: 8px 10px;
-    font-size: 14px;
+    font-size: 12px;
     border: 2px solid #333;
     border-radius: 4px;
     background-color: white;
@@ -210,8 +210,8 @@ button:hover {
 
 .route-btn {
     flex: 1;
-    padding: 10px 16px;
-    font-size: 15px;
+    padding: 6px 16px;
+    font-size: 12px;
     border: 2px solid #333;
     border-radius: 4px;
     background-color: white;
