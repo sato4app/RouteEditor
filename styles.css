@@ -165,7 +165,7 @@ button:hover {
 }
 
 .route-dropdown-short {
-    width: 6em;
+    width: 4em;
     padding: 6px 8px;
     font-size: 12px;
     border: 2px solid #333;
@@ -185,7 +185,7 @@ button:hover {
 }
 
 .route-dropdown-long {
-    width: 12em;
+    width: 8em;
     padding: 6px 8px;
     font-size: 12px;
     border: 2px solid #333;
