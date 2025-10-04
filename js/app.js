@@ -97,11 +97,19 @@ function extractPointsAndRoutes(geoJsonData) {
 
     const routeIdSet = new Set(); // route_idのセット
 
-    // ルート中間点からroute_idを収集
     geoJsonData.features.forEach(feature => {
         const featureType = feature.properties && feature.properties.type;
         const geometryType = feature.geometry && feature.geometry.type;
 
+        // ポイントGPSを収集
+        if (geometryType === 'Point' && featureType === 'ポイントGPS') {
+            const pointId = feature.properties && feature.properties.id;
+            if (pointId) {
+                allPoints.push(pointId);
+            }
+        }
+
+        // ルート中間点からroute_idを収集
         if (geometryType === 'Point' && featureType === 'route_waypoint') {
             const routeId = feature.properties && feature.properties.route_id;
             if (routeId) {
@@ -128,25 +136,15 @@ function extractPointsAndRoutes(geoJsonData) {
     });
 }
 
-// ドロップダウンの更新
+// ドロップダウンの更新（route-dropdown-shortのみ）
 function updateDropdowns() {
     const routeStartSelect = document.getElementById('routeStart');
-    const routeEndSelect = document.getElementById('routeEnd');
-    const routePathSelect = document.getElementById('routePath');
 
-    // 全ルートの開始点と終了点のIDを収集
-    const allRoutePointIds = [];
-    allRoutes.forEach(route => {
-        allRoutePointIds.push(route.startId);
-        allRoutePointIds.push(route.endId);
-    });
+    // ポイントGPSの1文字目をユニークにしてソート
+    const firstChars = [...new Set(allPoints.map(id => id.charAt(0)))].sort();
 
-    // ユニークにしてソート
-    const uniqueRoutePointIds = [...new Set(allRoutePointIds)].sort();
-
-    // 絞り込みドロップダウン（短い方）: IDの1文字目のみ
+    // 絞り込みドロップダウン（短い方）: ポイントGPSのIDの1文字目のみ
     routeStartSelect.innerHTML = '<option value=""></option>';
-    const firstChars = [...new Set(uniqueRoutePointIds.map(id => id.charAt(0)))].sort();
     firstChars.forEach(char => {
         const option = document.createElement('option');
         option.value = char;
@@ -154,51 +152,86 @@ function updateDropdowns() {
         routeStartSelect.appendChild(option);
     });
 
-    // 絞り込みドロップダウン（長い方）: 完全なID
+    // route-dropdown-longとroute-path-dropdownも更新
+    updateRouteLongDropdown();
+}
+
+// route-dropdown-longの更新（route-dropdown-shortの選択に応じて）
+function updateRouteLongDropdown() {
+    const routeStartSelect = document.getElementById('routeStart');
+    const routeEndSelect = document.getElementById('routeEnd');
+
+    const startCharFilter = routeStartSelect.value; // 1文字フィルター
+
+    // route-dropdown-shortが選択されている場合、選択値を含むルートポイントIDを収集
+    let filteredPointIds = [];
+    if (startCharFilter) {
+        const routePointIds = new Set();
+        allRoutes.forEach(route => {
+            if (route.startId.charAt(0) === startCharFilter) {
+                routePointIds.add(route.startId);
+                routePointIds.add(route.endId);
+            }
+            if (route.endId.charAt(0) === startCharFilter) {
+                routePointIds.add(route.startId);
+                routePointIds.add(route.endId);
+            }
+        });
+        filteredPointIds = [...routePointIds].sort();
+    } else {
+        // 選択されていなければ全てのルートポイントID
+        const allRoutePointIds = new Set();
+        allRoutes.forEach(route => {
+            allRoutePointIds.add(route.startId);
+            allRoutePointIds.add(route.endId);
+        });
+        filteredPointIds = [...allRoutePointIds].sort();
+    }
+
+    // route-dropdown-longを再構築
     routeEndSelect.innerHTML = '<option value="">選択</option>';
-    uniqueRoutePointIds.forEach(id => {
+    filteredPointIds.forEach(id => {
         const option = document.createElement('option');
         option.value = id;
         option.textContent = id;
         routeEndSelect.appendChild(option);
     });
 
-    // ルートドロップダウンを更新
-    updateRouteDropdown();
+    // route-path-dropdownも更新
+    updateRoutePathDropdown();
 }
 
-// ルートドロップダウンの更新（絞り込みに応じて）
-function updateRouteDropdown() {
+// route-path-dropdownの更新（絞り込みに応じて）
+function updateRoutePathDropdown() {
     const routeStartSelect = document.getElementById('routeStart');
     const routeEndSelect = document.getElementById('routeEnd');
     const routePathSelect = document.getElementById('routePath');
 
-    const startCharFilter = routeStartSelect.value; // 1文字フィルター（ID）
+    const startCharFilter = routeStartSelect.value; // 1文字フィルター
     const endIdFilter = routeEndSelect.value;       // 完全なIDフィルター
 
     // フィルタリング
     let filteredRoutes = allRoutes;
 
-    // 1文字目でフィルタリング（開始点または終了点のIDの1文字目が一致）
+    // route-dropdown-shortまたはroute-dropdown-longが選択されていれば絞り込み
     if (startCharFilter) {
         filteredRoutes = filteredRoutes.filter(r =>
             r.startId.charAt(0) === startCharFilter || r.endId.charAt(0) === startCharFilter
         );
     }
 
-    // 完全なIDでフィルタリング（開始点または終了点のIDが一致）
     if (endIdFilter) {
         filteredRoutes = filteredRoutes.filter(r =>
             r.startId === endIdFilter || r.endId === endIdFilter
         );
     }
 
-    // ルートドロップダウンを再構築
-    routePathSelect.innerHTML = '<option value="">開始 ～ 終了ポイント</option>';
+    // route-path-dropdownを再構築（選択がなければ全てのルート）
+    routePathSelect.innerHTML = '<option value="">開始ポイント ～ 終了ポイント</option>';
     filteredRoutes.forEach(route => {
         const option = document.createElement('option');
         option.value = route.routeId;
-        option.textContent = `${route.startId} ～ ${route.endId}`;  // IDのみ表示
+        option.textContent = `${route.startId} ～ ${route.endId}`;
         routePathSelect.appendChild(option);
     });
 }
@@ -460,11 +493,11 @@ document.querySelectorAll('input[name="mode"]').forEach(radio => {
 
 // 絞り込みドロップダウンの変更イベントリスナー
 document.getElementById('routeStart').addEventListener('change', function() {
-    updateRouteDropdown();
+    updateRouteLongDropdown();
 });
 
 document.getElementById('routeEnd').addEventListener('change', function() {
-    updateRouteDropdown();
+    updateRoutePathDropdown();
 });
 
 // ルート編集モードのイベントハンドラー
@@ -519,7 +552,7 @@ document.getElementById('clearRouteBtn').addEventListener('click', function() {
 document.getElementById('resetDropdownBtn').addEventListener('click', function() {
     document.getElementById('routeStart').value = '';
     document.getElementById('routeEnd').value = '';
-    updateRouteDropdown(); // ルートドロップダウンも初期状態に戻す
+    updateRouteLongDropdown(); // ルートドロップダウンも初期状態に戻す
     showMessage('ドロップダウンをリセットしました', 'success');
 });
 
