@@ -364,7 +364,14 @@ document.getElementById('fileInput').addEventListener('change', async function(e
                         }
                     },
                     onEachFeature: function(feature, layer) {
-                        if (feature.properties && feature.properties.name) {
+                        const featureType = feature.properties && feature.properties.type;
+
+                        // ポイントGPSの場合はIDをポップアップ表示
+                        if (featureType === 'ポイントGPS' && feature.properties && feature.properties.id) {
+                            layer.bindPopup(feature.properties.id);
+                        }
+                        // それ以外のフィーチャーは名称をポップアップ表示
+                        else if (feature.properties && feature.properties.name) {
                             layer.bindPopup(feature.properties.name);
                         }
                     }
@@ -381,6 +388,13 @@ document.getElementById('fileInput').addEventListener('change', async function(e
                 if (group.getBounds().isValid()) {
                     map.fitBounds(group.getBounds(), {padding: [10, 10]});
                 }
+
+                // ポイントGPSのポップアップを自動表示
+                geoJsonLayer.eachLayer(layer => {
+                    if (layer.feature && layer.feature.properties && layer.feature.properties.type === 'ポイントGPS') {
+                        layer.openPopup();
+                    }
+                });
 
                 showMessage('GeoJSONファイルを読み込みました');
             } catch (error) {
