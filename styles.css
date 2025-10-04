@@ -396,3 +396,16 @@ button:hover {
         opacity: 0;
     }
 }
+
+/* Leafletポップアップのスタイル */
+.leaflet-popup-content-wrapper {
+    padding: 2px;
+    font-size: 11px;
+    min-width: 30px;
+}
+
+.leaflet-popup-content {
+    margin: 4px 6px;
+    line-height: 1.2;
+    min-height: auto;
+}
