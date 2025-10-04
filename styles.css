@@ -204,6 +204,31 @@ button:hover {
     border-color: #0066cc;
 }
 
+.reset-btn {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    font-size: 18px;
+    border: 2px solid #666;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.reset-btn:hover {
+    background: #f0f0f0;
+    border-color: #333;
+}
+
+.reset-btn:active {
+    transform: scale(0.95);
+}
+
 .route-separator {
     font-size: 12px;
 }

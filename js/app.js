@@ -515,5 +515,13 @@ document.getElementById('clearRouteBtn').addEventListener('click', function() {
     }
 });
 
+// リセットボタン：ドロップダウンを一括クリア
+document.getElementById('resetDropdownBtn').addEventListener('click', function() {
+    document.getElementById('routeStart').value = '';
+    document.getElementById('routeEnd').value = '';
+    updateRouteDropdown(); // ルートドロップダウンも初期状態に戻す
+    showMessage('ドロップダウンをリセットしました', 'success');
+});
+
 // 初期統計表示
 updateStats(null);
