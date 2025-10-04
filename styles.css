@@ -295,9 +295,6 @@ button:hover {
     transform: translateY(1px);
 }
 
-#clearRouteBtn {
-    border-radius: 8px;
-}
 
 .file-input-label {
     display: inline-block;
