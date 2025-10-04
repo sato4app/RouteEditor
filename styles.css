@@ -402,10 +402,14 @@ button:hover {
     padding: 4px;
     font-size: 11px;
     min-width: 30px;
+    max-width: 120px;
 }
 
 .leaflet-popup-content {
     margin: 6px 8px;
     line-height: 1.2;
     min-height: auto;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
