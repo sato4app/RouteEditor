@@ -145,7 +145,7 @@ function updateDropdowns() {
     const uniqueRoutePointIds = [...new Set(allRoutePointIds)].sort();
 
     // 絞り込みドロップダウン（短い方）: IDの1文字目のみ
-    routeStartSelect.innerHTML = '<option value="">選択</option>';
+    routeStartSelect.innerHTML = '<option value=""></option>';
     const firstChars = [...new Set(uniqueRoutePointIds.map(id => id.charAt(0)))].sort();
     firstChars.forEach(char => {
         const option = document.createElement('option');
@@ -194,7 +194,7 @@ function updateRouteDropdown() {
     }
 
     // ルートドロップダウンを再構築
-    routePathSelect.innerHTML = '<option value="">開始ポイント ～ 終了ポイント</option>';
+    routePathSelect.innerHTML = '<option value="">開始 ～ 終了ポイント</option>';
     filteredRoutes.forEach(route => {
         const option = document.createElement('option');
         option.value = route.routeId;
