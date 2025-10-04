@@ -163,17 +163,17 @@ function updateRouteLongDropdown() {
 
     const startCharFilter = routeStartSelect.value; // 1文字フィルター
 
-    // route-dropdown-shortが選択されている場合、選択値を含むルートポイントIDを収集
+    // route-dropdown-shortが選択されている場合、選択値を含む開始ポイントIDまたは終了ポイントIDを収集
     let filteredPointIds = [];
     if (startCharFilter) {
         const routePointIds = new Set();
         allRoutes.forEach(route => {
+            // 開始ポイントIDが選択値を含む場合、そのIDを追加
             if (route.startId.charAt(0) === startCharFilter) {
                 routePointIds.add(route.startId);
-                routePointIds.add(route.endId);
             }
+            // 終了ポイントIDが選択値を含む場合、そのIDを追加
             if (route.endId.charAt(0) === startCharFilter) {
-                routePointIds.add(route.startId);
                 routePointIds.add(route.endId);
             }
         });
@@ -553,7 +553,7 @@ document.getElementById('resetDropdownBtn').addEventListener('click', function()
     document.getElementById('routeStart').value = '';
     document.getElementById('routeEnd').value = '';
     updateRouteLongDropdown(); // ルートドロップダウンも初期状態に戻す
-    showMessage('ドロップダウンをリセットしました', 'success');
+    // showMessage('ドロップダウンをリセットしました', 'success');
 });
 
 // 初期統計表示
