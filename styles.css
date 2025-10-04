@@ -399,13 +399,13 @@ button:hover {
 
 /* Leafletポップアップのスタイル */
 .leaflet-popup-content-wrapper {
-    padding: 2px;
+    padding: 4px;
     font-size: 11px;
     min-width: 30px;
 }
 
 .leaflet-popup-content {
-    margin: 4px 6px;
+    margin: 6px 8px;
     line-height: 1.2;
     min-height: auto;
 }
