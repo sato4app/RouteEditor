@@ -713,50 +713,61 @@ document.getElementById('routePath').addEventListener('change', function() {
 
 // ルート編集モードのイベントハンドラー
 document.getElementById('addRouteBtn').addEventListener('click', function() {
-    const start = document.getElementById('routeStart').value;
-    const end = document.getElementById('routeEnd').value;
     const path = document.getElementById('routePath').value;
 
-    if (!start || !end) {
-        showMessage('始点と終点を選択してください', 'warning');
+    if (!path) {
+        showMessage('ルートを選択してください', 'warning');
         return;
     }
 
-    console.log('ルート追加:', { start, end, path });
-    showMessage('ルートを追加しました');
+    console.log('ルート追加:', path);
 });
 
 document.getElementById('moveRouteBtn').addEventListener('click', function() {
-    console.log('ルート移動');
-    showMessage('ルートを移動しました');
+    const path = document.getElementById('routePath').value;
+
+    if (!path) {
+        showMessage('ルートを選択してください', 'warning');
+        return;
+    }
+
+    console.log('ルート移動:', path);
 });
 
 document.getElementById('deleteRouteBtn').addEventListener('click', function() {
     const path = document.getElementById('routePath').value;
+
     if (!path) {
-        showMessage('削除する経路を選択してください', 'warning');
+        showMessage('ルートを選択してください', 'warning');
         return;
     }
 
-    if (confirm('選択した経路を削除しますか？')) {
-        console.log('ルート削除:', path);
-        showMessage('ルートを削除しました');
-    }
+    console.log('ルート削除:', path);
 });
 
 document.getElementById('optimizeRouteBtn').addEventListener('click', function() {
-    console.log('ルート最適化');
-    showMessage('ルートを最適化しました');
+    const path = document.getElementById('routePath').value;
+
+    if (!path) {
+        showMessage('ルートを選択してください', 'warning');
+        return;
+    }
+
+    console.log('ルート最適化:', path);
 });
 
 document.getElementById('clearRouteBtn').addEventListener('click', function() {
-    if (confirm('すべての選択をクリアしますか？')) {
-        document.getElementById('routeStart').value = '';
-        document.getElementById('routeEnd').value = '';
-        document.getElementById('routePath').value = '';
-        console.log('ルートクリア');
-        showMessage('クリアしました');
+    const path = document.getElementById('routePath').value;
+
+    if (!path) {
+        showMessage('ルートを選択してください', 'warning');
+        return;
     }
+
+    document.getElementById('routeStart').value = '';
+    document.getElementById('routeEnd').value = '';
+    document.getElementById('routePath').value = '';
+    console.log('ルートクリア');
 });
 
 // リセットボタン：ドロップダウンを一括クリア
