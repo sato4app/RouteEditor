@@ -85,6 +85,8 @@ let loadedData = null;
 let lastLoadedFileHandle = null; // File System Access API用のファイルハンドル
 let allPoints = []; // 全ポイントのリスト
 let allRoutes = []; // 全ルートのリスト（開始点～終了点のペア）
+let selectedRouteId = null; // 選択中のルートID
+let markerMap = new Map(); // フィーチャーID/route_idをキーにしたマーカーのマップ
 
 // ポイントとルートの抽出
 function extractPointsAndRoutes(geoJsonData) {
@@ -236,6 +238,91 @@ function updateRoutePathDropdown() {
     });
 }
 
+// ルート選択時のマーカー色変更
+function highlightRoute(routeId) {
+    // 以前の選択をリセット
+    resetRouteHighlight();
+
+    if (!routeId) return;
+
+    selectedRouteId = routeId;
+
+    // routeIdからstartIdとendIdを抽出
+    const match = routeId.match(/^route_(.+)_to_(.+)$/);
+    if (!match) return;
+
+    const startId = match[1];
+    const endId = match[2];
+
+    // 開始・終了ポイントを赤色に変更
+    const startMarker = markerMap.get(startId);
+    const endMarker = markerMap.get(endId);
+
+    if (startMarker && startMarker.setStyle) {
+        startMarker.setStyle({ fillColor: '#ff0000', color: '#ff0000' });
+    }
+    if (endMarker && endMarker.setStyle) {
+        endMarker.setStyle({ fillColor: '#ff0000', color: '#ff0000' });
+    }
+
+    // 中間点を朱色(#ef454a)に変更
+    const waypointMarkers = markerMap.get(routeId);
+    if (Array.isArray(waypointMarkers)) {
+        waypointMarkers.forEach(marker => {
+            if (marker && marker.getElement) {
+                const element = marker.getElement();
+                if (element) {
+                    const div = element.querySelector('div');
+                    if (div) {
+                        div.style.backgroundColor = '#ef454a';
+                    }
+                }
+            }
+        });
+    }
+}
+
+// ルートハイライトのリセット
+function resetRouteHighlight() {
+    if (!selectedRouteId) return;
+
+    // routeIdからstartIdとendIdを抽出
+    const match = selectedRouteId.match(/^route_(.+)_to_(.+)$/);
+    if (match) {
+        const startId = match[1];
+        const endId = match[2];
+
+        // 開始・終了ポイントを元の色（緑）に戻す
+        const startMarker = markerMap.get(startId);
+        const endMarker = markerMap.get(endId);
+
+        if (startMarker && startMarker.setStyle) {
+            startMarker.setStyle(DEFAULTS.FEATURE_STYLES['ポイントGPS']);
+        }
+        if (endMarker && endMarker.setStyle) {
+            endMarker.setStyle(DEFAULTS.FEATURE_STYLES['ポイントGPS']);
+        }
+    }
+
+    // 中間点を元の色（橙色）に戻す
+    const waypointMarkers = markerMap.get(selectedRouteId);
+    if (Array.isArray(waypointMarkers)) {
+        waypointMarkers.forEach(marker => {
+            if (marker && marker.getElement) {
+                const element = marker.getElement();
+                if (element) {
+                    const div = element.querySelector('div');
+                    if (div) {
+                        div.style.backgroundColor = '#f58220';
+                    }
+                }
+            }
+        });
+    }
+
+    selectedRouteId = null;
+}
+
 // 統計情報の更新
 function updateStats(geoJsonData) {
     let pointCount = 0;      // ポイントGPS
@@ -321,6 +408,7 @@ document.getElementById('fileInput').addEventListener('change', async function(e
 
                 // 既存のレイヤーをクリア
                 geoJsonLayer.clearLayers();
+                markerMap.clear();
 
                 // GeoJSONデータを地図に追加
                 L.geoJSON(geoJsonData, {
@@ -337,10 +425,11 @@ document.getElementById('fileInput').addEventListener('change', async function(e
                         const featureType = feature.properties && feature.properties.type;
                         const style = DEFAULTS.FEATURE_STYLES[featureType] || DEFAULTS.POINT_STYLE;
 
+                        let marker;
                         // 形状に基づいてマーカーを作成
                         if (style.shape === 'diamond') {
                             // 菱形（ダイヤモンド型）マーカー
-                            return L.marker(latlng, {
+                            marker = L.marker(latlng, {
                                 icon: L.divIcon({
                                     className: 'diamond-marker',
                                     html: `<div style="width: ${style.radius * 2}px; height: ${style.radius * 2}px; background-color: ${style.fillColor}; transform: rotate(45deg); opacity: ${style.fillOpacity};"></div>`,
@@ -350,7 +439,7 @@ document.getElementById('fileInput').addEventListener('change', async function(e
                             });
                         } else if (style.shape === 'square') {
                             // 正方形マーカー
-                            return L.marker(latlng, {
+                            marker = L.marker(latlng, {
                                 icon: L.divIcon({
                                     className: 'square-marker',
                                     html: `<div style="width: ${style.radius}px; height: ${style.radius}px; background-color: ${style.fillColor}; opacity: ${style.fillOpacity};"></div>`,
@@ -360,11 +449,29 @@ document.getElementById('fileInput').addEventListener('change', async function(e
                             });
                         } else {
                             // デフォルトの円形マーカー
-                            return L.circleMarker(latlng, style);
+                            marker = L.circleMarker(latlng, style);
                         }
+
+                        // マーカーをマップに保存（ポイントGPSはid、ルート中間点はroute_idをキーに）
+                        if (featureType === 'ポイントGPS' && feature.properties && feature.properties.id) {
+                            markerMap.set(feature.properties.id, marker);
+                        } else if (featureType === 'route_waypoint' && feature.properties && feature.properties.route_id) {
+                            const routeId = feature.properties.route_id;
+                            if (!markerMap.has(routeId)) {
+                                markerMap.set(routeId, []);
+                            }
+                            markerMap.get(routeId).push(marker);
+                        }
+
+                        return marker;
                     },
                     onEachFeature: function(feature, layer) {
                         const featureType = feature.properties && feature.properties.type;
+
+                        // ルート中間点はポップアップ不要
+                        if (featureType === 'route_waypoint') {
+                            return;
+                        }
 
                         // ポイントGPSの場合はIDをポップアップ表示
                         if (featureType === 'ポイントGPS' && feature.properties && feature.properties.id) {
@@ -422,9 +529,14 @@ document.getElementById('exportBtn').addEventListener('click', async function() 
         return;
     }
 
+    // 統計情報を取得
+    const pointCount = parseInt(document.getElementById('pointCount').value) || 0;
+    const routeCount = parseInt(document.getElementById('routeCount').value) || 0;
+    const spotCount = parseInt(document.getElementById('spotCount').value) || 0;
+
     const dataStr = JSON.stringify(loadedData, null, 2);
     const blob = new Blob([dataStr], {type: 'application/json'});
-    const filename = `MapGPS-${getDateString()}.geojson`;
+    const filename = `MapGPS-${getDateString()}_P${pointCount}_R${routeCount}_S${spotCount}.geojson`;
 
     // File System Access APIが使える場合は、読み込んだフォルダに保存
     if ('showSaveFilePicker' in window) {
@@ -512,6 +624,12 @@ document.getElementById('routeStart').addEventListener('change', function() {
 
 document.getElementById('routeEnd').addEventListener('change', function() {
     updateRoutePathDropdown();
+});
+
+// route-path-dropdownの変更イベントリスナー（ルートハイライト）
+document.getElementById('routePath').addEventListener('change', function() {
+    const selectedRouteId = this.value;
+    highlightRoute(selectedRouteId);
 });
 
 // ルート編集モードのイベントハンドラー
