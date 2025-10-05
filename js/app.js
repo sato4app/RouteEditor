@@ -87,6 +87,7 @@ let allPoints = []; // 全ポイントのリスト
 let allRoutes = []; // 全ルートのリスト（開始点～終了点のペア）
 let selectedRouteId = null; // 選択中のルートID
 let markerMap = new Map(); // フィーチャーID/route_idをキーにしたマーカーのマップ
+let selectedRouteLine = null; // 選択中のルート線（Leafletポリライン）
 
 // ポイントとルートの抽出
 function extractPointsAndRoutes(geoJsonData) {
@@ -253,7 +254,55 @@ function updateRoutePathDropdown() {
     }
 }
 
-// ルート選択時のマーカー色変更
+// GeoJSONから座標を取得する関数
+function getCoordinatesFromGeoJSON(routeId) {
+    if (!loadedData || !loadedData.features) return null;
+
+    const coordinates = [];
+    const match = routeId.match(/^route_(.+)_to_(.+)$/);
+    if (!match) return null;
+
+    const startId = match[1];
+    const endId = match[2];
+
+    // 開始ポイントの座標を取得
+    const startFeature = loadedData.features.find(f =>
+        f.properties && f.properties.type === 'ポイントGPS' && f.properties.id === startId
+    );
+    if (startFeature && startFeature.geometry && startFeature.geometry.coordinates) {
+        const [lng, lat] = startFeature.geometry.coordinates;
+        coordinates.push([lat, lng]);
+    }
+
+    // 中間点の座標を取得（waypoint_numberでソート）
+    const waypoints = loadedData.features
+        .filter(f => f.properties && f.properties.route_id === routeId && f.properties.type === 'route_waypoint')
+        .sort((a, b) => {
+            const numA = parseInt(a.properties.waypoint_number) || 0;
+            const numB = parseInt(b.properties.waypoint_number) || 0;
+            return numA - numB;
+        });
+
+    waypoints.forEach(wp => {
+        if (wp.geometry && wp.geometry.coordinates) {
+            const [lng, lat] = wp.geometry.coordinates;
+            coordinates.push([lat, lng]);
+        }
+    });
+
+    // 終了ポイントの座標を取得
+    const endFeature = loadedData.features.find(f =>
+        f.properties && f.properties.type === 'ポイントGPS' && f.properties.id === endId
+    );
+    if (endFeature && endFeature.geometry && endFeature.geometry.coordinates) {
+        const [lng, lat] = endFeature.geometry.coordinates;
+        coordinates.push([lat, lng]);
+    }
+
+    return coordinates.length >= 2 ? coordinates : null;
+}
+
+// ルート選択時のマーカー色変更と線描画
 function highlightRoute(routeId) {
     // 以前の選択をリセット
     resetRouteHighlight();
@@ -295,6 +344,15 @@ function highlightRoute(routeId) {
             }
         });
     }
+
+    // ルート線を描画
+    const coordinates = getCoordinatesFromGeoJSON(routeId);
+    if (coordinates) {
+        selectedRouteLine = L.polyline(coordinates, {
+            color: '#ef454a',
+            weight: 2
+        }).addTo(map);
+    }
 }
 
 // ルートハイライトのリセット
@@ -333,6 +391,12 @@ function resetRouteHighlight() {
                 }
             }
         });
+    }
+
+    // ルート線を削除
+    if (selectedRouteLine) {
+        map.removeLayer(selectedRouteLine);
+        selectedRouteLine = null;
     }
 
     selectedRouteId = null;
