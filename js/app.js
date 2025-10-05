@@ -199,8 +199,15 @@ function updateRouteLongDropdown() {
         routeEndSelect.appendChild(option);
     });
 
-    // route-path-dropdownも更新
+    // route-path-dropdownも更新（選択値がリセットされる可能性があるので色をリセット）
+    const routePathSelect = document.getElementById('routePath');
+    const previousSelection = routePathSelect.value;
     updateRoutePathDropdown();
+
+    // 以前の選択が新しいリストにない場合、ハイライトをリセット
+    if (previousSelection && routePathSelect.value !== previousSelection) {
+        resetRouteHighlight();
+    }
 }
 
 // route-path-dropdownの更新（絞り込みに応じて）
@@ -211,6 +218,9 @@ function updateRoutePathDropdown() {
 
     const startCharFilter = routeStartSelect.value; // 1文字フィルター
     const endIdFilter = routeEndSelect.value;       // 完全なIDフィルター
+
+    // 以前の選択を保存
+    const previousSelection = routePathSelect.value;
 
     // フィルタリング
     let filteredRoutes = allRoutes;
@@ -236,6 +246,11 @@ function updateRoutePathDropdown() {
         option.textContent = `${route.startId} ～ ${route.endId}`;
         routePathSelect.appendChild(option);
     });
+
+    // 以前の選択が新しいリストにない場合、ハイライトをリセット
+    if (previousSelection && routePathSelect.value !== previousSelection) {
+        resetRouteHighlight();
+    }
 }
 
 // ルート選択時のマーカー色変更
@@ -682,6 +697,9 @@ document.getElementById('clearRouteBtn').addEventListener('click', function() {
 
 // リセットボタン：ドロップダウンを一括クリア
 document.getElementById('resetDropdownBtn').addEventListener('click', function() {
+    // ハイライトをリセット
+    resetRouteHighlight();
+
     document.getElementById('routeStart').value = '';
     document.getElementById('routeEnd').value = '';
     updateRouteLongDropdown(); // ルートドロップダウンも初期状態に戻す
