@@ -90,6 +90,8 @@ let markerMap = new Map(); // フィーチャーID/route_idをキーにしたマ
 let selectedRouteLine = null; // 選択中のルート線（Leafletポリライン）
 let isAddMode = false; // 追加モードフラグ
 let mapClickHandler = null; // 地図クリックイベントハンドラー
+let isMoveMode = false; // 移動モードフラグ
+let draggableMarkers = []; // ドラッグ可能なマーカーのリスト
 
 // ポイントとルートの抽出
 function extractPointsAndRoutes(geoJsonData) {
@@ -801,6 +803,93 @@ function exitAddMode() {
     map.getContainer().style.cursor = '';
 }
 
+// 中間点をドラッグ可能にする関数
+function makeWaypointsDraggable(routeId) {
+    const waypointMarkers = markerMap.get(routeId);
+    if (!Array.isArray(waypointMarkers)) return;
+
+    draggableMarkers = [];
+
+    waypointMarkers.forEach((marker, index) => {
+        // divIconを使用しているマーカーを扱う
+        if (marker && marker.getElement) {
+            const element = marker.getElement();
+            if (element) {
+                element.style.cursor = 'move';
+
+                // ドラッグ機能を追加
+                marker.dragging = marker.dragging || new L.Handler.MarkerDrag(marker);
+                marker.dragging.enable();
+
+                // ドラッグ中のイベント
+                marker.on('drag', function(e) {
+                    // GeoJSONデータの座標を更新
+                    const newLatLng = marker.getLatLng();
+                    updateWaypointCoordinates(routeId, index, newLatLng);
+
+                    // ルート線を再描画
+                    redrawRouteLine(routeId);
+                });
+
+                // ドラッグ終了時のイベント
+                marker.on('dragend', function(e) {
+                    const newLatLng = marker.getLatLng();
+                    updateWaypointCoordinates(routeId, index, newLatLng);
+                    redrawRouteLine(routeId);
+                });
+
+                draggableMarkers.push(marker);
+            }
+        }
+    });
+}
+
+// 中間点の座標を更新する関数
+function updateWaypointCoordinates(routeId, waypointIndex, latlng) {
+    if (!loadedData || !loadedData.features) return;
+
+    // route_idに該当する中間点を取得してソート
+    const waypoints = loadedData.features
+        .filter(f => f.properties && f.properties.route_id === routeId && f.properties.type === 'route_waypoint')
+        .sort((a, b) => {
+            const numA = parseInt(a.properties.waypoint_number) || 0;
+            const numB = parseInt(b.properties.waypoint_number) || 0;
+            return numA - numB;
+        });
+
+    // 指定されたインデックスの中間点の座標を更新
+    if (waypoints[waypointIndex]) {
+        waypoints[waypointIndex].geometry.coordinates = [latlng.lng, latlng.lat];
+    }
+}
+
+// 移動モードを解除する関数
+function exitMoveMode() {
+    if (!isMoveMode) return;
+
+    isMoveMode = false;
+
+    // ボタンの押下状態を解除
+    const moveBtn = document.getElementById('moveRouteBtn');
+    moveBtn.classList.remove('active');
+
+    // 全てのドラッグ可能マーカーのドラッグを無効化
+    draggableMarkers.forEach(marker => {
+        if (marker && marker.dragging) {
+            marker.dragging.disable();
+        }
+        const element = marker.getElement && marker.getElement();
+        if (element) {
+            element.style.cursor = '';
+        }
+    });
+
+    draggableMarkers = [];
+
+    // カーソルを通常に戻す
+    map.getContainer().style.cursor = '';
+}
+
 // ルート編集モードのイベントハンドラー
 document.getElementById('addRouteBtn').addEventListener('click', function() {
     const path = document.getElementById('routePath').value;
@@ -850,7 +939,26 @@ document.getElementById('moveRouteBtn').addEventListener('click', function() {
         return;
     }
 
-    console.log('ルート移動:', path);
+    // 既に移動モードの場合は解除
+    if (isMoveMode) {
+        exitMoveMode();
+        showMessage('移動モードを解除しました', 'success');
+        return;
+    }
+
+    // 追加モードが有効な場合は解除
+    if (isAddMode) {
+        exitAddMode();
+    }
+
+    // 移動モードを開始
+    isMoveMode = true;
+    this.classList.add('active');
+
+    // 中間点をドラッグ可能にする
+    makeWaypointsDraggable(path);
+
+    showMessage('中間点をドラッグして移動できます。移動ボタンをもう一度クリックで解除', 'success');
 });
 
 document.getElementById('deleteRouteBtn').addEventListener('click', function() {
