@@ -1335,7 +1335,7 @@ document.getElementById('clearRouteBtn').addEventListener('click', function() {
     // route-path-dropdownを更新して選択無し状態にする
     document.getElementById('routePath').value = '';
 
-    showMessage('ルートをクリアしました', 'success');
+    showMessage('ルートを削除(=クリア)しました', 'success');
 });
 
 // リセットボタン：ドロップダウンを一括クリア
