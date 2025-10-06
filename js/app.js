@@ -258,6 +258,11 @@ function updateRoutePathDropdown() {
         routePathSelect.appendChild(option);
     });
 
+    // 以前の選択を復元
+    if (previousSelection) {
+        routePathSelect.value = previousSelection;
+    }
+
     // 以前の選択が新しいリストにない場合、ハイライトをリセット
     if (previousSelection && routePathSelect.value !== previousSelection) {
         resetRouteHighlight();
