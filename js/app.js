@@ -1002,6 +1002,14 @@ document.getElementById('addRouteBtn').addEventListener('click', function() {
         return;
     }
 
+    // 他のモードが有効な場合は解除
+    if (isMoveMode) {
+        exitMoveMode();
+    }
+    if (isDeleteMode) {
+        exitDeleteMode();
+    }
+
     // 追加モードを開始
     isAddMode = true;
     this.classList.add('active');
@@ -1042,9 +1050,12 @@ document.getElementById('moveRouteBtn').addEventListener('click', function() {
         return;
     }
 
-    // 追加モードが有効な場合は解除
+    // 他のモードが有効な場合は解除
     if (isAddMode) {
         exitAddMode();
+    }
+    if (isDeleteMode) {
+        exitDeleteMode();
     }
 
     // 移動モードを開始
