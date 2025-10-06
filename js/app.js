@@ -151,10 +151,15 @@ function updateDropdowns() {
     // 以前の選択を保存
     const previousStartSelection = routeStartSelect.value;
 
-    // ポイントGPSの1文字目をユニークにしてソート
-    const firstChars = [...new Set(allPoints.map(id => id.charAt(0)))].sort();
+    // allRoutesから実際にルートが存在するポイントIDの1文字目を収集
+    const routePointIds = new Set();
+    allRoutes.forEach(route => {
+        routePointIds.add(route.startId);
+        routePointIds.add(route.endId);
+    });
+    const firstChars = [...new Set([...routePointIds].map(id => id.charAt(0)))].sort();
 
-    // 絞り込みドロップダウン（短い方）: ポイントGPSのIDの1文字目のみ
+    // 絞り込みドロップダウン（短い方）: ルートが存在するポイントGPSのIDの1文字目のみ
     routeStartSelect.innerHTML = '<option value=""></option>';
     firstChars.forEach(char => {
         const option = document.createElement('option');
