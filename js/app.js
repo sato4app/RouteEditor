@@ -148,6 +148,9 @@ function extractPointsAndRoutes(geoJsonData) {
 function updateDropdowns() {
     const routeStartSelect = document.getElementById('routeStart');
 
+    // 以前の選択を保存
+    const previousStartSelection = routeStartSelect.value;
+
     // ポイントGPSの1文字目をユニークにしてソート
     const firstChars = [...new Set(allPoints.map(id => id.charAt(0)))].sort();
 
@@ -160,6 +163,12 @@ function updateDropdowns() {
         routeStartSelect.appendChild(option);
     });
 
+    // 以前の選択を復元（リストになければ空文字列になる）
+    if (previousStartSelection) {
+        routeStartSelect.value = previousStartSelection;
+        // 選択値がリストになければ自動的に空文字列になる
+    }
+
     // route-dropdown-longとroute-path-dropdownも更新
     updateRouteLongDropdown();
 }
@@ -170,6 +179,9 @@ function updateRouteLongDropdown() {
     const routeEndSelect = document.getElementById('routeEnd');
 
     const startCharFilter = routeStartSelect.value; // 1文字フィルター
+
+    // 以前の選択を保存
+    const previousEndSelection = routeEndSelect.value;
 
     // route-dropdown-shortが選択されている場合、選択値を含む開始ポイントIDまたは終了ポイントIDを収集
     let filteredPointIds = [];
@@ -204,6 +216,12 @@ function updateRouteLongDropdown() {
         option.textContent = id;
         routeEndSelect.appendChild(option);
     });
+
+    // 以前の選択を復元（リストになければ空文字列になる）
+    if (previousEndSelection) {
+        routeEndSelect.value = previousEndSelection;
+        // 選択値がリストになければ自動的に空文字列になる
+    }
 
     // route-path-dropdownも更新（選択値がリセットされる可能性があるので色をリセット）
     const routePathSelect = document.getElementById('routePath');
@@ -1305,8 +1323,16 @@ document.getElementById('clearRouteBtn').addEventListener('click', function() {
     // selectedRouteIdをリセット
     selectedRouteId = null;
 
+    // allRoutesから削除したルートを除外
+    const routeIndex = allRoutes.findIndex(r => r.routeId === path);
+    if (routeIndex !== -1) {
+        allRoutes.splice(routeIndex, 1);
+    }
+
+    // route-dropdown-shortとroute-dropdown-longを更新
+    updateDropdowns();
+
     // route-path-dropdownを更新して選択無し状態にする
-    updateRoutePathDropdown();
     document.getElementById('routePath').value = '';
 
     showMessage('ルートをクリアしました', 'success');
