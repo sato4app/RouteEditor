@@ -986,6 +986,90 @@ function exitDeleteMode() {
     }
 }
 
+// 2点間の距離を計算する関数（ハバーサイン公式）
+function calculateDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371; // 地球の半径（km）
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // km単位の距離
+}
+
+// ルートを最適化する関数（貪欲法：最短距離の点を順次選択）
+function optimizeRoute(routeId) {
+    if (!loadedData || !loadedData.features) return;
+
+    const match = routeId.match(/^route_(.+)_to_(.+)$/);
+    if (!match) return;
+
+    const startId = match[1];
+    const endId = match[2];
+
+    // 開始ポイントと終了ポイントの座標を取得
+    const startFeature = loadedData.features.find(f =>
+        f.properties && f.properties.type === 'ポイントGPS' && f.properties.id === startId
+    );
+    const endFeature = loadedData.features.find(f =>
+        f.properties && f.properties.type === 'ポイントGPS' && f.properties.id === endId
+    );
+
+    if (!startFeature || !endFeature) {
+        showMessage('開始ポイントまたは終了ポイントが見つかりません', 'error');
+        return;
+    }
+
+    const [startLng, startLat] = startFeature.geometry.coordinates;
+    const [endLng, endLat] = endFeature.geometry.coordinates;
+
+    // 中間点を取得
+    const waypoints = loadedData.features.filter(f =>
+        f.properties && f.properties.route_id === routeId && f.properties.type === 'route_waypoint'
+    );
+
+    if (waypoints.length === 0) {
+        showMessage('最適化する中間点がありません', 'warning');
+        return;
+    }
+
+    // 貪欲法で最適な順序を決定
+    const optimizedWaypoints = [];
+    const remainingWaypoints = [...waypoints];
+    let currentLat = startLat;
+    let currentLng = startLng;
+
+    while (remainingWaypoints.length > 0) {
+        // 現在位置から最も近い中間点を探す
+        let nearestIndex = 0;
+        let minDistance = Infinity;
+
+        remainingWaypoints.forEach((wp, index) => {
+            const [wpLng, wpLat] = wp.geometry.coordinates;
+            const distance = calculateDistance(currentLat, currentLng, wpLat, wpLng);
+            if (distance < minDistance) {
+                minDistance = distance;
+                nearestIndex = index;
+            }
+        });
+
+        // 最も近い中間点を選択
+        const nearestWaypoint = remainingWaypoints.splice(nearestIndex, 1)[0];
+        optimizedWaypoints.push(nearestWaypoint);
+
+        // 現在位置を更新
+        [currentLng, currentLat] = nearestWaypoint.geometry.coordinates;
+    }
+
+    // waypoint_numberを振り直す
+    optimizedWaypoints.forEach((wp, index) => {
+        wp.properties.waypoint_number = (index + 1).toString();
+    });
+
+    showMessage(`ルートを最適化しました（${optimizedWaypoints.length}個の中間点）`, 'success');
+}
+
 // ルート編集モードのイベントハンドラー
 document.getElementById('addRouteBtn').addEventListener('click', function() {
     const path = document.getElementById('routePath').value;
@@ -1109,7 +1193,22 @@ document.getElementById('optimizeRouteBtn').addEventListener('click', function()
         return;
     }
 
-    console.log('ルート最適化:', path);
+    // 他のモードが有効な場合は解除
+    if (isAddMode) {
+        exitAddMode();
+    }
+    if (isMoveMode) {
+        exitMoveMode();
+    }
+    if (isDeleteMode) {
+        exitDeleteMode();
+    }
+
+    // ルートを最適化
+    optimizeRoute(path);
+
+    // ルート線を再描画
+    redrawRouteLine(path);
 });
 
 document.getElementById('clearRouteBtn').addEventListener('click', function() {
