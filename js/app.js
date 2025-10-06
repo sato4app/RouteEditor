@@ -1350,6 +1350,7 @@ document.getElementById('resetDropdownBtn').addEventListener('click', function()
 
     document.getElementById('routeStart').value = '';
     document.getElementById('routeEnd').value = '';
+    document.getElementById('routePath').value = '';
     updateRouteLongDropdown(); // ルートドロップダウンも初期状態に戻す
     // showMessage('ドロップダウンをリセットしました', 'success');
 });
