@@ -247,9 +247,14 @@ function updateRoutePathDropdown() {
     // route-path-dropdownを再構築（選択がなければ全てのルート）
     routePathSelect.innerHTML = '<option value="">開始ポイント ～ 終了ポイント</option>';
     filteredRoutes.forEach(route => {
+        // 中間点の数を取得
+        const waypointCount = loadedData.features.filter(f =>
+            f.properties && f.properties.route_id === route.routeId && f.properties.type === 'route_waypoint'
+        ).length;
+
         const option = document.createElement('option');
         option.value = route.routeId;
-        option.textContent = `${route.startId} ～ ${route.endId}`;
+        option.textContent = `${route.startId} ～ ${route.endId} (${waypointCount})`;
         routePathSelect.appendChild(option);
     });
 
@@ -1101,7 +1106,7 @@ document.getElementById('addRouteBtn').addEventListener('click', function() {
     // カーソルを十字に変更
     map.getContainer().style.cursor = 'crosshair';
 
-    showMessage('地図上をクリックして中間点を追加してください', 'success');
+    showMessage('地図上をクリックして中間点を追加してください。\n追加ボタンをもう一度クリックで解除', 'success');
 
     // 地図クリックイベントを設定
     mapClickHandler = function(e) {
