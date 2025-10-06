@@ -268,7 +268,7 @@ function updateRoutePathDropdown() {
     }
 
     // route-path-dropdownを再構築（選択がなければ全てのルート）
-    routePathSelect.innerHTML = '<option value="">開始ポイント ～ 終了ポイント</option>';
+    routePathSelect.innerHTML = '<option value="">開始 ～ 終了ポイント</option>';
     filteredRoutes.forEach(route => {
         // 中間点の数を取得
         const waypointCount = loadedData.features.filter(f =>
