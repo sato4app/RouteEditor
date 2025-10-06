@@ -1235,10 +1235,81 @@ document.getElementById('clearRouteBtn').addEventListener('click', function() {
         return;
     }
 
-    document.getElementById('routeStart').value = '';
-    document.getElementById('routeEnd').value = '';
+    // 他のモードが有効な場合は解除
+    if (isAddMode) {
+        exitAddMode();
+    }
+    if (isMoveMode) {
+        exitMoveMode();
+    }
+    if (isDeleteMode) {
+        exitDeleteMode();
+    }
+
+    // ルート名を取得（route-path-dropdownの選択テキスト）
+    const routePathSelect = document.getElementById('routePath');
+    const selectedOption = routePathSelect.options[routePathSelect.selectedIndex];
+    const routeName = selectedOption ? selectedOption.textContent : path;
+
+    // 確認メッセージを表示
+    const confirmed = confirm(`ルート ${routeName} を削除しますか？`);
+    if (!confirmed) {
+        return;
+    }
+
+    // ルートの中間点をすべて削除
+    if (loadedData && loadedData.features) {
+        // 中間点を逆順で削除（配列の要素を削除しながら走査するため）
+        for (let i = loadedData.features.length - 1; i >= 0; i--) {
+            const feature = loadedData.features[i];
+            if (feature.properties &&
+                feature.properties.route_id === path &&
+                feature.properties.type === 'route_waypoint') {
+                loadedData.features.splice(i, 1);
+            }
+        }
+    }
+
+    // 地図から中間点マーカーを削除
+    const waypointMarkers = markerMap.get(path);
+    if (Array.isArray(waypointMarkers)) {
+        waypointMarkers.forEach(marker => {
+            map.removeLayer(marker);
+        });
+        markerMap.delete(path);
+    }
+
+    // ルート線を削除
+    if (selectedRouteLine) {
+        map.removeLayer(selectedRouteLine);
+        selectedRouteLine = null;
+    }
+
+    // 開始・終了ポイントのマーカー色を元に戻す
+    const match = path.match(/^route_(.+)_to_(.+)$/);
+    if (match) {
+        const startId = match[1];
+        const endId = match[2];
+
+        const startMarker = markerMap.get(startId);
+        const endMarker = markerMap.get(endId);
+
+        if (startMarker && startMarker.setStyle) {
+            startMarker.setStyle(DEFAULTS.FEATURE_STYLES['ポイントGPS']);
+        }
+        if (endMarker && endMarker.setStyle) {
+            endMarker.setStyle(DEFAULTS.FEATURE_STYLES['ポイントGPS']);
+        }
+    }
+
+    // selectedRouteIdをリセット
+    selectedRouteId = null;
+
+    // route-path-dropdownを更新して選択無し状態にする
+    updateRoutePathDropdown();
     document.getElementById('routePath').value = '';
-    console.log('ルートクリア');
+
+    showMessage('ルートをクリアしました', 'success');
 });
 
 // リセットボタン：ドロップダウンを一括クリア
