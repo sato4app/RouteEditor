@@ -418,6 +418,9 @@ function addWaypointToRoute(routeId, latlng) {
         markerMap.set(routeId, []);
     }
     markerMap.get(routeId).push(marker);
+
+    // route-path-dropdownを更新（中間点数が変わったため）
+    updateRoutePathDropdown();
 }
 
 // ルート線を再描画する関数
@@ -812,9 +815,6 @@ function exitAddMode() {
 
     // カーソルを通常に戻す
     map.getContainer().style.cursor = '';
-
-    // route-path-dropdownを更新（中間点数が変わった可能性があるため）
-    updateRoutePathDropdown();
 }
 
 // 中間点をドラッグ可能にする関数
@@ -941,6 +941,9 @@ function deleteWaypoint(routeId, marker) {
 
         // ルート線を再描画
         redrawRouteLine(routeId);
+
+        // route-path-dropdownを更新（中間点数が変わったため）
+        updateRoutePathDropdown();
     }
 }
 
@@ -997,9 +1000,6 @@ function exitDeleteMode() {
             });
         }
     }
-
-    // route-path-dropdownを更新（中間点数が変わった可能性があるため）
-    updateRoutePathDropdown();
 }
 
 // 2点間の距離を計算する関数（ハバーサイン公式）
