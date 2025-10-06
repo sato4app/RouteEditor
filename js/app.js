@@ -92,6 +92,7 @@ let isAddMode = false; // 追加モードフラグ
 let mapClickHandler = null; // 地図クリックイベントハンドラー
 let isMoveMode = false; // 移動モードフラグ
 let draggableMarkers = []; // ドラッグ可能なマーカーのリスト
+let isDeleteMode = false; // 削除モードフラグ
 
 // ポイントとルートの抽出
 function extractPointsAndRoutes(geoJsonData) {
@@ -890,6 +891,101 @@ function exitMoveMode() {
     map.getContainer().style.cursor = '';
 }
 
+// 中間点を削除する関数
+function deleteWaypoint(routeId, marker) {
+    if (!loadedData || !loadedData.features) return;
+
+    // マーカーの座標を取得
+    const markerLatLng = marker.getLatLng();
+
+    // GeoJSONデータから該当する中間点を探して削除
+    const waypointIndex = loadedData.features.findIndex(f => {
+        if (f.properties && f.properties.route_id === routeId && f.properties.type === 'route_waypoint') {
+            if (f.geometry && f.geometry.coordinates) {
+                const [lng, lat] = f.geometry.coordinates;
+                // 座標が一致する中間点を検索（小数点以下6桁で比較）
+                return Math.abs(lat - markerLatLng.lat) < 0.000001 && Math.abs(lng - markerLatLng.lng) < 0.000001;
+            }
+        }
+        return false;
+    });
+
+    if (waypointIndex !== -1) {
+        // GeoJSONデータから削除
+        loadedData.features.splice(waypointIndex, 1);
+
+        // 地図からマーカーを削除
+        map.removeLayer(marker);
+
+        // markerMapから削除
+        const waypointMarkers = markerMap.get(routeId);
+        if (Array.isArray(waypointMarkers)) {
+            const markerIdx = waypointMarkers.indexOf(marker);
+            if (markerIdx !== -1) {
+                waypointMarkers.splice(markerIdx, 1);
+            }
+        }
+
+        // ルート線を再描画
+        redrawRouteLine(routeId);
+    }
+}
+
+// 中間点をクリック可能にする関数（削除モード用）
+function makeWaypointsClickable(routeId) {
+    const waypointMarkers = markerMap.get(routeId);
+    if (!Array.isArray(waypointMarkers)) return;
+
+    waypointMarkers.forEach(marker => {
+        if (marker && marker.getElement) {
+            const element = marker.getElement();
+            if (element) {
+                element.style.cursor = 'pointer';
+
+                // クリックイベントを追加
+                marker.on('click', function(e) {
+                    if (!isDeleteMode) return;
+
+                    // イベントの伝播を停止（地図のクリックイベントを防ぐ）
+                    L.DomEvent.stopPropagation(e);
+
+                    // 中間点を削除
+                    deleteWaypoint(routeId, marker);
+                });
+            }
+        }
+    });
+}
+
+// 削除モードを解除する関数
+function exitDeleteMode() {
+    if (!isDeleteMode) return;
+
+    isDeleteMode = false;
+
+    // ボタンの押下状態を解除
+    const deleteBtn = document.getElementById('deleteRouteBtn');
+    deleteBtn.classList.remove('active');
+
+    // カーソルを通常に戻す
+    map.getContainer().style.cursor = '';
+
+    // 中間点のカーソルとクリックイベントをリセット
+    if (selectedRouteId) {
+        const waypointMarkers = markerMap.get(selectedRouteId);
+        if (Array.isArray(waypointMarkers)) {
+            waypointMarkers.forEach(marker => {
+                const element = marker.getElement && marker.getElement();
+                if (element) {
+                    element.style.cursor = '';
+                }
+                // クリックイベントを削除
+                marker.off('click');
+            });
+        }
+    }
+}
+
 // ルート編集モードのイベントハンドラー
 document.getElementById('addRouteBtn').addEventListener('click', function() {
     const path = document.getElementById('routePath').value;
@@ -969,7 +1065,29 @@ document.getElementById('deleteRouteBtn').addEventListener('click', function() {
         return;
     }
 
-    console.log('ルート削除:', path);
+    // 既に削除モードの場合は解除
+    if (isDeleteMode) {
+        exitDeleteMode();
+        showMessage('削除モードを解除しました', 'success');
+        return;
+    }
+
+    // 他のモードが有効な場合は解除
+    if (isAddMode) {
+        exitAddMode();
+    }
+    if (isMoveMode) {
+        exitMoveMode();
+    }
+
+    // 削除モードを開始
+    isDeleteMode = true;
+    this.classList.add('active');
+
+    // 中間点をクリック可能にする
+    makeWaypointsClickable(path);
+
+    showMessage('中間点をクリックして削除できます。削除ボタンをもう一度クリックで解除', 'success');
 });
 
 document.getElementById('optimizeRouteBtn').addEventListener('click', function() {
