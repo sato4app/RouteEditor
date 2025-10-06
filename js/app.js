@@ -88,6 +88,8 @@ let allRoutes = []; // 全ルートのリスト（開始点～終了点のペア
 let selectedRouteId = null; // 選択中のルートID
 let markerMap = new Map(); // フィーチャーID/route_idをキーにしたマーカーのマップ
 let selectedRouteLine = null; // 選択中のルート線（Leafletポリライン）
+let isAddMode = false; // 追加モードフラグ
+let mapClickHandler = null; // 地図クリックイベントハンドラー
 
 // ポイントとルートの抽出
 function extractPointsAndRoutes(geoJsonData) {
@@ -346,6 +348,74 @@ function highlightRoute(routeId) {
     }
 
     // ルート線を描画
+    const coordinates = getCoordinatesFromGeoJSON(routeId);
+    if (coordinates) {
+        selectedRouteLine = L.polyline(coordinates, {
+            color: '#ef454a',
+            weight: 2
+        }).addTo(map);
+    }
+}
+
+// 中間点を追加する関数
+function addWaypointToRoute(routeId, latlng) {
+    if (!loadedData || !loadedData.features) return;
+
+    // 既存の中間点の最大waypoint_numberを取得
+    let maxWaypointNumber = 0;
+    loadedData.features.forEach(feature => {
+        if (feature.properties && feature.properties.route_id === routeId && feature.properties.type === 'route_waypoint') {
+            const num = parseInt(feature.properties.waypoint_number) || 0;
+            if (num > maxWaypointNumber) {
+                maxWaypointNumber = num;
+            }
+        }
+    });
+
+    // 新しい中間点フィーチャーを作成
+    const newWaypoint = {
+        type: 'Feature',
+        properties: {
+            type: 'route_waypoint',
+            route_id: routeId,
+            waypoint_number: (maxWaypointNumber + 1).toString()
+        },
+        geometry: {
+            type: 'Point',
+            coordinates: [latlng.lng, latlng.lat]
+        }
+    };
+
+    // GeoJSONデータに追加
+    loadedData.features.push(newWaypoint);
+
+    // 新しいマーカーを作成して地図に追加
+    const style = DEFAULTS.FEATURE_STYLES['route_waypoint'];
+    const marker = L.marker(latlng, {
+        icon: L.divIcon({
+            className: 'diamond-marker',
+            html: `<div style="width: ${style.radius * 2}px; height: ${style.radius * 2}px; background-color: #ef454a; transform: rotate(45deg); opacity: ${style.fillOpacity};"></div>`,
+            iconSize: [style.radius * 2, style.radius * 2],
+            iconAnchor: [style.radius, style.radius]
+        })
+    }).addTo(geoJsonLayer);
+
+    // markerMapに追加
+    if (!markerMap.has(routeId)) {
+        markerMap.set(routeId, []);
+    }
+    markerMap.get(routeId).push(marker);
+}
+
+// ルート線を再描画する関数
+function redrawRouteLine(routeId) {
+    // 既存のルート線を削除
+    if (selectedRouteLine) {
+        map.removeLayer(selectedRouteLine);
+        selectedRouteLine = null;
+    }
+
+    // 新しい座標を取得して描画
     const coordinates = getCoordinatesFromGeoJSON(routeId);
     if (coordinates) {
         selectedRouteLine = L.polyline(coordinates, {
@@ -711,6 +781,26 @@ document.getElementById('routePath').addEventListener('change', function() {
     highlightRoute(selectedRouteId);
 });
 
+// 追加モードを解除する関数
+function exitAddMode() {
+    if (!isAddMode) return;
+
+    isAddMode = false;
+
+    // ボタンの押下状態を解除
+    const addBtn = document.getElementById('addRouteBtn');
+    addBtn.classList.remove('active');
+
+    // 地図クリックイベントを削除
+    if (mapClickHandler) {
+        map.off('click', mapClickHandler);
+        mapClickHandler = null;
+    }
+
+    // カーソルを通常に戻す
+    map.getContainer().style.cursor = '';
+}
+
 // ルート編集モードのイベントハンドラー
 document.getElementById('addRouteBtn').addEventListener('click', function() {
     const path = document.getElementById('routePath').value;
@@ -720,7 +810,36 @@ document.getElementById('addRouteBtn').addEventListener('click', function() {
         return;
     }
 
-    console.log('ルート追加:', path);
+    // 既に追加モードの場合は解除
+    if (isAddMode) {
+        exitAddMode();
+        showMessage('追加モードを解除しました', 'success');
+        return;
+    }
+
+    // 追加モードを開始
+    isAddMode = true;
+    this.classList.add('active');
+
+    // カーソルを十字に変更
+    map.getContainer().style.cursor = 'crosshair';
+
+    showMessage('地図上をクリックして中間点を追加してください', 'success');
+
+    // 地図クリックイベントを設定
+    mapClickHandler = function(e) {
+        if (!isAddMode) return;
+
+        // クリック位置に中間点を追加
+        addWaypointToRoute(path, e.latlng);
+
+        // ルート線を再描画
+        redrawRouteLine(path);
+
+        showMessage('中間点を追加しました', 'success');
+    };
+
+    map.on('click', mapClickHandler);
 });
 
 document.getElementById('moveRouteBtn').addEventListener('click', function() {

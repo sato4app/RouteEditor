@@ -295,6 +295,16 @@ button:hover {
     transform: translateY(1px);
 }
 
+.route-btn.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #0056b3;
+}
+
+.route-btn.active:hover {
+    background-color: #0056b3;
+}
+
 
 .file-input-label {
     display: inline-block;
