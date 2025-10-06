@@ -308,16 +308,23 @@ button:hover {
 
 .file-input-label {
     display: inline-block;
-    padding: 4px 8px;
+    width: 60px;
+    padding: 8px 0;
     border: 2px solid #666;
     border-radius: 4px;
     background: white;
     cursor: pointer;
     font-size: 12px;
+    text-align: center;
 }
 
 .file-input-label:hover {
     background: #f0f0f0;
+}
+
+#exportBtn {
+    width: 60px;
+    padding: 8px 0;
 }
 
 /* カスタムズームコントロールのスタイル */
