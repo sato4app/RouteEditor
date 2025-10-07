@@ -464,6 +464,54 @@ function redrawRouteLine(routeId) {
     }
 }
 
+// 中間点マーカーを再描画する関数
+function redrawWaypointMarkers(routeId) {
+    // 既存の中間点マーカーを削除
+    const waypointMarkers = markerMap.get(routeId);
+    if (Array.isArray(waypointMarkers)) {
+        waypointMarkers.forEach(marker => {
+            map.removeLayer(marker);
+        });
+        markerMap.delete(routeId);
+    }
+
+    // 中間点を取得（waypoint_numberでソート）
+    const waypoints = loadedData.features
+        .filter(f => f.properties && f.properties.route_id === routeId && f.properties.type === 'route_waypoint')
+        .sort((a, b) => {
+            const numA = parseInt(a.properties.waypoint_number) || 0;
+            const numB = parseInt(b.properties.waypoint_number) || 0;
+            return numA - numB;
+        });
+
+    // 選択中のルートかどうか（色を変えるため）
+    const isSelected = selectedRouteId === routeId;
+    const markerColor = isSelected ? '#ef454a' : '#f58220';
+
+    // 新しいマーカーを作成
+    const newMarkers = [];
+    const style = DEFAULTS.FEATURE_STYLES['route_waypoint'];
+
+    waypoints.forEach(wp => {
+        if (wp.geometry && wp.geometry.coordinates) {
+            const [lng, lat] = wp.geometry.coordinates;
+            const marker = L.marker([lat, lng], {
+                icon: L.divIcon({
+                    className: 'diamond-marker',
+                    html: `<div style="width: ${style.radius * 2}px; height: ${style.radius * 2}px; background-color: ${markerColor}; transform: rotate(45deg); opacity: ${style.fillOpacity};"></div>`,
+                    iconSize: [style.radius * 2, style.radius * 2],
+                    iconAnchor: [style.radius, style.radius]
+                })
+            }).addTo(geoJsonLayer);
+
+            newMarkers.push(marker);
+        }
+    });
+
+    // markerMapに再登録
+    markerMap.set(routeId, newMarkers);
+}
+
 // ルートハイライトのリセット
 function resetRouteHighlight() {
     if (!selectedRouteId) return;
@@ -1105,6 +1153,9 @@ function optimizeRoute(routeId) {
     optimizedWaypoints.forEach((wp, index) => {
         wp.properties.waypoint_number = (index + 1).toString();
     });
+
+    // マーカーを再描画
+    redrawWaypointMarkers(routeId);
 
     showMessage(`ルートを最適化しました（${optimizedWaypoints.length}個の中間点）`, 'success');
 }
