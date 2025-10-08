@@ -1520,11 +1520,20 @@ function highlightSpot(spotIndex) {
 
     // markerMapからマーカーを探す（spotの場合）
     if (geometryType === 'Point' && featureType === 'spot') {
-        // markerMapからspotマーカーを検索
+        // spotマーカーを検索（divIconの場合）
         geoJsonLayer.eachLayer(layer => {
             if (layer.feature === spot.feature) {
                 selectedSpotMarker = layer;
-                if (layer.setStyle) {
+                // divIconの場合、DOM要素を直接操作
+                if (layer.getElement) {
+                    const element = layer.getElement();
+                    if (element) {
+                        const div = element.querySelector('div');
+                        if (div) {
+                            div.style.backgroundColor = '#00ffff';
+                        }
+                    }
+                } else if (layer.setStyle) {
                     layer.setStyle({ fillColor: '#00ffff', color: '#00ffff' });
                 }
             }
@@ -1551,7 +1560,16 @@ function resetSpotHighlight() {
 
     // マーカーを元の色に戻す
     if (geometryType === 'Point' && featureType === 'spot') {
-        if (selectedSpotMarker.setStyle) {
+        // divIconの場合、DOM要素を直接操作
+        if (selectedSpotMarker.getElement) {
+            const element = selectedSpotMarker.getElement();
+            if (element) {
+                const div = element.querySelector('div');
+                if (div) {
+                    div.style.backgroundColor = '#0000ff'; // 元の青色
+                }
+            }
+        } else if (selectedSpotMarker.setStyle) {
             selectedSpotMarker.setStyle(DEFAULTS.FEATURE_STYLES['spot']);
         }
     } else if (geometryType === 'Polygon' || geometryType === 'MultiPolygon') {
