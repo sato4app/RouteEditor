@@ -704,6 +704,7 @@ document.getElementById('fileInput').addEventListener('change', async function(e
                     },
                     onEachFeature: function(feature, layer) {
                         const featureType = feature.properties && feature.properties.type;
+                        const geometryType = feature.geometry && feature.geometry.type;
 
                         // ルート中間点はポップアップ不要
                         if (featureType === 'route_waypoint') {
@@ -718,6 +719,25 @@ document.getElementById('fileInput').addEventListener('change', async function(e
                         else if (feature.properties && feature.properties.name) {
                             layer.bindPopup(feature.properties.name);
                         }
+
+                        // スポット（Polygon または type='spot' のPoint）のクリックイベント
+                        if ((geometryType === 'Polygon' || geometryType === 'MultiPolygon') ||
+                            (geometryType === 'Point' && featureType === 'spot')) {
+                            layer.on('click', function(e) {
+                                // スポットモードの場合のみ処理
+                                const currentMode = document.querySelector('input[name="mode"]:checked').value;
+                                if (currentMode === MODES.SPOT) {
+                                    // クリックされたスポットのインデックスを検索
+                                    const spotIndex = allSpots.findIndex(spot => spot.feature === feature);
+                                    if (spotIndex !== -1) {
+                                        // ドロップダウンを選択
+                                        document.getElementById('spotSelect').value = spotIndex;
+                                        // ハイライト処理を実行
+                                        highlightSpot(spotIndex);
+                                    }
+                                }
+                            });
+                        }
                     }
                 }).addTo(geoJsonLayer);
 
@@ -725,6 +745,8 @@ document.getElementById('fileInput').addEventListener('change', async function(e
                 updateStats(geoJsonData);
                 extractPointsAndRoutes(geoJsonData);
                 updateDropdowns();
+                extractSpots(geoJsonData);
+                updateSpotDropdown();
 
                 // データの範囲に地図をフィット
                 const group = new L.featureGroup();
@@ -1413,3 +1435,166 @@ document.getElementById('resetDropdownBtn').addEventListener('click', function()
 
 // 初期統計表示
 updateStats(null);
+
+// ========================================
+// スポット編集モードの機能
+// ========================================
+
+let allSpots = []; // 全スポットのリスト
+let selectedSpotFeature = null; // 選択中のスポットフィーチャー
+let selectedSpotMarker = null; // 選択中のスポットマーカー
+
+// スポット一覧の抽出
+function extractSpots(geoJsonData) {
+    allSpots = [];
+
+    if (!geoJsonData || !geoJsonData.features) {
+        return;
+    }
+
+    geoJsonData.features.forEach(feature => {
+        const featureType = feature.properties && feature.properties.type;
+        const geometryType = feature.geometry && feature.geometry.type;
+
+        // スポット（Polygon または type='spot' のPoint）を収集
+        if ((geometryType === 'Polygon' || geometryType === 'MultiPolygon') ||
+            (geometryType === 'Point' && featureType === 'spot')) {
+            const name = feature.properties && feature.properties.name;
+            if (name) {
+                allSpots.push({
+                    name: name,
+                    feature: feature
+                });
+            }
+        }
+    });
+}
+
+// スポットドロップダウンの更新
+function updateSpotDropdown() {
+    const spotSelect = document.getElementById('spotSelect');
+    const spotCountDisplay = document.getElementById('spotCountDisplay');
+
+    // スポット数を更新
+    spotCountDisplay.value = allSpots.length;
+
+    // 以前の選択を保存
+    const previousSelection = spotSelect.value;
+
+    // ドロップダウンを再構築
+    spotSelect.innerHTML = '<option value="">選択してください</option>';
+    allSpots.forEach((spot, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = spot.name;
+        spotSelect.appendChild(option);
+    });
+
+    // 以前の選択を復元
+    if (previousSelection) {
+        spotSelect.value = previousSelection;
+    }
+}
+
+// スポット選択時の処理
+function highlightSpot(spotIndex) {
+    // 以前の選択をリセット
+    resetSpotHighlight();
+
+    if (spotIndex === '' || spotIndex === null || spotIndex === undefined) {
+        document.getElementById('selectedSpotName').value = '';
+        return;
+    }
+
+    const spot = allSpots[spotIndex];
+    if (!spot) return;
+
+    selectedSpotFeature = spot.feature;
+
+    // テキストボックスに名称を表示
+    document.getElementById('selectedSpotName').value = spot.name;
+
+    // マーカーの色を水色に変更
+    const featureType = spot.feature.properties && spot.feature.properties.type;
+    const geometryType = spot.feature.geometry && spot.feature.geometry.type;
+
+    // markerMapからマーカーを探す（spotの場合）
+    if (geometryType === 'Point' && featureType === 'spot') {
+        // markerMapからspotマーカーを検索
+        geoJsonLayer.eachLayer(layer => {
+            if (layer.feature === spot.feature) {
+                selectedSpotMarker = layer;
+                if (layer.setStyle) {
+                    layer.setStyle({ fillColor: '#00ffff', color: '#00ffff' });
+                }
+            }
+        });
+    } else if (geometryType === 'Polygon' || geometryType === 'MultiPolygon') {
+        // ポリゴンの場合
+        geoJsonLayer.eachLayer(layer => {
+            if (layer.feature === spot.feature) {
+                selectedSpotMarker = layer;
+                if (layer.setStyle) {
+                    layer.setStyle({ fillColor: '#00ffff', color: '#00ffff' });
+                }
+            }
+        });
+    }
+}
+
+// スポットハイライトのリセット
+function resetSpotHighlight() {
+    if (!selectedSpotMarker || !selectedSpotFeature) return;
+
+    const featureType = selectedSpotFeature.properties && selectedSpotFeature.properties.type;
+    const geometryType = selectedSpotFeature.geometry && selectedSpotFeature.geometry.type;
+
+    // マーカーを元の色に戻す
+    if (geometryType === 'Point' && featureType === 'spot') {
+        if (selectedSpotMarker.setStyle) {
+            selectedSpotMarker.setStyle(DEFAULTS.FEATURE_STYLES['spot']);
+        }
+    } else if (geometryType === 'Polygon' || geometryType === 'MultiPolygon') {
+        if (selectedSpotMarker.setStyle) {
+            selectedSpotMarker.setStyle(DEFAULTS.LINE_STYLE);
+        }
+    }
+
+    selectedSpotFeature = null;
+    selectedSpotMarker = null;
+}
+
+// スポットドロップダウンの変更イベントリスナー
+document.getElementById('spotSelect').addEventListener('change', function() {
+    const selectedIndex = this.value;
+    highlightSpot(selectedIndex);
+});
+
+// テキストボックスのフォーカス離脱時の処理
+document.getElementById('selectedSpotName').addEventListener('blur', function() {
+    const newName = this.value.trim();
+
+    if (!selectedSpotFeature || !newName) return;
+
+    // GeoJSONデータの名称を更新
+    if (selectedSpotFeature.properties) {
+        selectedSpotFeature.properties.name = newName;
+    }
+
+    // 現在の選択インデックスを取得
+    const spotSelect = document.getElementById('spotSelect');
+    const currentIndex = parseInt(spotSelect.value);
+
+    // allSpotsのデータを更新
+    if (allSpots[currentIndex]) {
+        allSpots[currentIndex].name = newName;
+    }
+
+    // ドロップダウンを更新
+    updateSpotDropdown();
+
+    // 選択を維持
+    spotSelect.value = currentIndex;
+
+    showMessage('スポット名を更新しました', 'success');
+});
