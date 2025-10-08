@@ -1622,3 +1622,296 @@ document.getElementById('selectedSpotName').addEventListener('blur', function() 
 
     showMessage('スポット名を更新しました', 'success');
 });
+
+// スポット追加モードの状態管理
+let isAddSpotMode = false;
+let spotMapClickHandler = null;
+
+// スポット追加モードを解除する関数
+function exitAddSpotMode() {
+    if (!isAddSpotMode) return;
+
+    isAddSpotMode = false;
+
+    // ボタンの押下状態を解除
+    const addBtn = document.getElementById('addSpotBtn');
+    addBtn.classList.remove('active');
+
+    // 地図クリックイベントを削除
+    if (spotMapClickHandler) {
+        map.off('click', spotMapClickHandler);
+        spotMapClickHandler = null;
+    }
+
+    // カーソルを通常に戻す
+    map.getContainer().style.cursor = '';
+}
+
+// 新しいスポットを追加する関数
+function addSpotToMap(latlng) {
+    if (!loadedData) return;
+
+    // 新しいスポット名を生成（Spot-1, Spot-2, ...）
+    let spotNumber = 1;
+    let newSpotName = '';
+    let nameExists = true;
+
+    while (nameExists) {
+        newSpotName = `Spot-${spotNumber}`;
+        nameExists = allSpots.some(spot => spot.name === newSpotName);
+        if (nameExists) spotNumber++;
+    }
+
+    // 新しいスポットフィーチャーを作成
+    const newSpotFeature = {
+        type: 'Feature',
+        properties: {
+            type: 'spot',
+            name: newSpotName
+        },
+        geometry: {
+            type: 'Point',
+            coordinates: [latlng.lng, latlng.lat]
+        }
+    };
+
+    // GeoJSONデータに追加
+    if (!loadedData.features) {
+        loadedData.features = [];
+    }
+    loadedData.features.push(newSpotFeature);
+
+    // 新しいマーカーを作成して地図に追加
+    const style = DEFAULTS.FEATURE_STYLES['spot'];
+    const marker = L.marker(latlng, {
+        icon: L.divIcon({
+            className: 'square-marker',
+            html: `<div style="width: ${style.radius}px; height: ${style.radius}px; background-color: ${style.fillColor}; opacity: ${style.fillOpacity};"></div>`,
+            iconSize: [style.radius, style.radius],
+            iconAnchor: [style.radius / 2, style.radius / 2]
+        })
+    }).addTo(geoJsonLayer);
+
+    // ポップアップを追加
+    marker.bindPopup(newSpotName);
+
+    // クリックイベントを追加
+    marker.on('click', function(e) {
+        const currentMode = document.querySelector('input[name="mode"]:checked').value;
+        if (currentMode === MODES.SPOT) {
+            const spotIndex = allSpots.findIndex(spot => spot.feature === newSpotFeature);
+            if (spotIndex !== -1) {
+                document.getElementById('spotSelect').value = spotIndex;
+                highlightSpot(spotIndex);
+            }
+        }
+    });
+
+    // マーカーにフィーチャー情報を保存
+    marker.feature = newSpotFeature;
+
+    // allSpotsに追加
+    allSpots.push({
+        name: newSpotName,
+        feature: newSpotFeature
+    });
+
+    // スポットドロップダウンを更新
+    updateSpotDropdown();
+
+    // 統計情報を更新
+    updateStats(loadedData);
+}
+
+// 追加ボタンのイベントハンドラー
+document.getElementById('addSpotBtn').addEventListener('click', function() {
+    // 既に追加モードの場合は解除
+    if (isAddSpotMode) {
+        exitAddSpotMode();
+        showMessage('追加モードを解除しました', 'success');
+        return;
+    }
+
+    // データが読み込まれていない場合
+    if (!loadedData) {
+        showMessage('先にGeoJSONファイルを読み込んでください', 'warning');
+        return;
+    }
+
+    // 追加モードを開始
+    isAddSpotMode = true;
+    this.classList.add('active');
+
+    // カーソルを十字に変更
+    map.getContainer().style.cursor = 'crosshair';
+
+    showMessage('地図上をクリックして新しいスポットを追加してください。\n追加ボタンをもう一度クリックで解除', 'success');
+
+    // 地図クリックイベントを設定
+    spotMapClickHandler = function(e) {
+        if (!isAddSpotMode) return;
+
+        // クリック位置に新しいスポットを追加
+        addSpotToMap(e.latlng);
+
+        showMessage('スポットを追加しました', 'success');
+    };
+
+    map.on('click', spotMapClickHandler);
+});
+
+// スポット移動モードの状態管理
+let isMoveSpotMode = false;
+let draggableSpotMarker = null;
+
+// スポット移動モードを解除する関数
+function exitMoveSpotMode() {
+    if (!isMoveSpotMode) return;
+
+    isMoveSpotMode = false;
+
+    // ボタンの押下状態を解除
+    const moveBtn = document.getElementById('moveSpotBtn');
+    moveBtn.classList.remove('active');
+
+    // ドラッグ可能なマーカーのドラッグを無効化
+    if (draggableSpotMarker) {
+        if (draggableSpotMarker.dragging) {
+            draggableSpotMarker.dragging.disable();
+        }
+        const element = draggableSpotMarker.getElement && draggableSpotMarker.getElement();
+        if (element) {
+            element.style.cursor = '';
+        }
+        draggableSpotMarker = null;
+    }
+
+    // カーソルを通常に戻す
+    map.getContainer().style.cursor = '';
+}
+
+// スポットマーカーをドラッグ可能にする関数
+function makeSpotDraggable(marker, feature) {
+    if (!marker) return;
+
+    draggableSpotMarker = marker;
+
+    // divIconを使用しているマーカーを扱う
+    if (marker.getElement) {
+        const element = marker.getElement();
+        if (element) {
+            element.style.cursor = 'move';
+        }
+    }
+
+    // ドラッグ機能を追加
+    marker.dragging = marker.dragging || new L.Handler.MarkerDrag(marker);
+    marker.dragging.enable();
+
+    // ドラッグ中のイベント
+    marker.on('drag', function(e) {
+        // GeoJSONデータの座標を更新
+        const newLatLng = marker.getLatLng();
+        if (feature.geometry && feature.geometry.coordinates) {
+            feature.geometry.coordinates = [newLatLng.lng, newLatLng.lat];
+        }
+    });
+
+    // ドラッグ終了時のイベント
+    marker.on('dragend', function(e) {
+        const newLatLng = marker.getLatLng();
+        if (feature.geometry && feature.geometry.coordinates) {
+            feature.geometry.coordinates = [newLatLng.lng, newLatLng.lat];
+        }
+        showMessage('スポットの位置を更新しました', 'success');
+    });
+}
+
+// 移動ボタンのイベントハンドラー
+document.getElementById('moveSpotBtn').addEventListener('click', function() {
+    // 既に移動モードの場合は解除
+    if (isMoveSpotMode) {
+        exitMoveSpotMode();
+        showMessage('移動モードを解除しました', 'success');
+        return;
+    }
+
+    // スポットが選択されていない場合
+    if (!selectedSpotFeature || !selectedSpotMarker) {
+        showMessage('移動するスポットを選択してください', 'warning');
+        return;
+    }
+
+    // 追加モードが有効な場合は解除
+    if (isAddSpotMode) {
+        exitAddSpotMode();
+    }
+
+    // 移動モードを開始
+    isMoveSpotMode = true;
+    this.classList.add('active');
+
+    // スポットマーカーをドラッグ可能にする
+    makeSpotDraggable(selectedSpotMarker, selectedSpotFeature);
+
+    showMessage('スポットをドラッグして移動できます。移動ボタンをもう一度クリックで解除', 'success');
+});
+
+// 削除ボタンのイベントハンドラー
+document.getElementById('deleteSpotBtn').addEventListener('click', function() {
+    // スポットが選択されていない場合
+    if (!selectedSpotFeature || !selectedSpotMarker) {
+        showMessage('削除するスポットを選択してください', 'warning');
+        return;
+    }
+
+    // スポット名を取得
+    const spotName = selectedSpotFeature.properties && selectedSpotFeature.properties.name;
+
+    // 確認メッセージを表示
+    const confirmed = confirm(`スポット「${spotName}」を削除しますか？`);
+    if (!confirmed) {
+        return;
+    }
+
+    // 他のモードが有効な場合は解除
+    if (isAddSpotMode) {
+        exitAddSpotMode();
+    }
+    if (isMoveSpotMode) {
+        exitMoveSpotMode();
+    }
+
+    // GeoJSONデータから削除
+    if (loadedData && loadedData.features) {
+        const featureIndex = loadedData.features.findIndex(f => f === selectedSpotFeature);
+        if (featureIndex !== -1) {
+            loadedData.features.splice(featureIndex, 1);
+        }
+    }
+
+    // 地図からマーカーを削除
+    if (selectedSpotMarker) {
+        map.removeLayer(selectedSpotMarker);
+    }
+
+    // allSpotsから削除
+    const spotIndex = allSpots.findIndex(spot => spot.feature === selectedSpotFeature);
+    if (spotIndex !== -1) {
+        allSpots.splice(spotIndex, 1);
+    }
+
+    // 選択状態をリセット
+    selectedSpotFeature = null;
+    selectedSpotMarker = null;
+
+    // ドロップダウンと統計を更新
+    updateSpotDropdown();
+    updateStats(loadedData);
+
+    // ドロップダウンの選択をクリア
+    document.getElementById('spotSelect').value = '';
+    document.getElementById('selectedSpotName').value = '';
+
+    showMessage('スポットを削除しました', 'success');
+});
