@@ -78,6 +78,7 @@ const CustomZoomControl = L.Control.extend({
 // デフォルトのズームコントロールを削除し、カスタムズームコントロールを追加
 map.removeControl(map.zoomControl);
 new CustomZoomControl({ position: 'bottomright' }).addTo(map);
+// new CustomZoomControl({ position: 'topleft' }).addTo(map);
 
 // GeoJSONレイヤーグループ
 let geoJsonLayer = L.layerGroup().addTo(map);
@@ -839,16 +840,20 @@ document.querySelectorAll('input[name="mode"]').forEach(radio => {
         // パネルの表示切り替え
         const geojsonPanel = document.getElementById('geojsonPanel');
         const routePanel = document.getElementById('routePanel');
+        const spotPanel = document.getElementById('spotPanel');
 
         if (this.value === MODES.GEOJSON) {
             geojsonPanel.style.display = 'block';
             routePanel.style.display = 'none';
+            spotPanel.style.display = 'none';
         } else if (this.value === MODES.ROUTE) {
             geojsonPanel.style.display = 'none';
             routePanel.style.display = 'block';
+            spotPanel.style.display = 'none';
         } else if (this.value === MODES.SPOT) {
             geojsonPanel.style.display = 'none';
             routePanel.style.display = 'none';
+            spotPanel.style.display = 'block';
         }
     });
 });

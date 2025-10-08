@@ -414,6 +414,120 @@ button:hover {
     }
 }
 
+/* スポット編集パネル */
+.spot-panel {
+    border: 2px solid #999;
+    border-radius: 8px;
+    padding: 20px;
+    background: white;
+}
+
+.spot-title {
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.spot-count {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.spot-label {
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.spot-count-input {
+    width: 60px;
+    padding: 6px 8px;
+    font-size: 12px;
+    border: 2px solid #333;
+    border-radius: 4px;
+    text-align: center;
+    background-color: #f8f9fa;
+}
+
+.spot-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.spot-dropdown {
+    flex: 1;
+    padding: 8px 10px;
+    font-size: 12px;
+    border: 2px solid #333;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=UTF-8,<svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L6 6L11 1" stroke="%23333" stroke-width="2" stroke-linecap="round"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 32px;
+}
+
+.spot-dropdown:focus {
+    outline: none;
+    border-color: #0066cc;
+}
+
+.spot-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.spot-name-input {
+    flex: 1;
+    padding: 6px 8px;
+    font-size: 12px;
+    border: 2px solid #333;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+}
+
+.spot-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.spot-btn {
+    flex: 1;
+    padding: 6px 16px;
+    font-size: 12px;
+    border: 2px solid #333;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.spot-btn:hover {
+    background-color: #f0f0f0;
+}
+
+.spot-btn:active {
+    transform: translateY(1px);
+}
+
+.spot-btn.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #0056b3;
+}
+
+.spot-btn.active:hover {
+    background-color: #0056b3;
+}
+
 /* Leafletポップアップのスタイル */
 .leaflet-popup-content-wrapper {
     padding: 4px;

@@ -95,6 +95,33 @@
                 </div>
             </div>
         </div>
+
+        <div class="spot-panel" id="spotPanel" style="display: none;">
+            <div class="spot-title">スポット詳細情報</div>
+
+            <div class="spot-count">
+                <span class="spot-label">スポット数</span>
+                <input type="text" class="spot-count-input" id="spotCountDisplay" readonly>
+            </div>
+
+            <div class="spot-selector">
+                <span class="spot-label">スポット名</span>
+                <select class="spot-dropdown" id="spotSelect">
+                    <option value="">選択してください</option>
+                </select>
+            </div>
+
+            <div class="spot-name">
+                <span class="spot-label">選択スポット名</span>
+                <input type="text" class="spot-name-input" id="selectedSpotName" readonly>
+            </div>
+
+            <div class="spot-buttons">
+                <button class="spot-btn" id="addSpotBtn">追加</button>
+                <button class="spot-btn" id="moveSpotBtn">移動</button>
+                <button class="spot-btn" id="deleteSpotBtn">削除</button>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
