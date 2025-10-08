@@ -1518,8 +1518,11 @@ function highlightSpot(spotIndex) {
     const featureType = spot.feature.properties && spot.feature.properties.type;
     const geometryType = spot.feature.geometry && spot.feature.geometry.type;
 
+    // 'spot' と 'スポット' の双方をスポットとして扱う
+    const isSpotType = featureType === 'spot' || featureType === 'スポット';
+
     // markerMapからマーカーを探す（spotの場合）
-    if (geometryType === 'Point' && featureType === 'spot') {
+    if (geometryType === 'Point' && isSpotType) {
         // spotマーカーを検索（divIconの場合）
         geoJsonLayer.eachLayer(layer => {
             if (layer.feature === spot.feature) {
@@ -1557,16 +1560,19 @@ function resetSpotHighlight() {
 
     const featureType = selectedSpotFeature.properties && selectedSpotFeature.properties.type;
     const geometryType = selectedSpotFeature.geometry && selectedSpotFeature.geometry.type;
+    const isSpotType = featureType === 'spot' || featureType === 'スポット';
 
     // マーカーを元の色に戻す
-    if (geometryType === 'Point' && featureType === 'spot') {
+    if (geometryType === 'Point' && isSpotType) {
         // divIconの場合、DOM要素を直接操作
         if (selectedSpotMarker.getElement) {
             const element = selectedSpotMarker.getElement();
             if (element) {
                 const div = element.querySelector('div');
                 if (div) {
-                    div.style.backgroundColor = '#0000ff'; // 元の青色
+                    // 定数のデフォルト色に戻す
+                    const defaultColor = (DEFAULTS && DEFAULTS.FEATURE_STYLES && DEFAULTS.FEATURE_STYLES['spot'] && DEFAULTS.FEATURE_STYLES['spot'].fillColor) || '#0000ff';
+                    div.style.backgroundColor = defaultColor;
                 }
             }
         } else if (selectedSpotMarker.setStyle) {
