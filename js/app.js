@@ -1498,16 +1498,24 @@ function updateSpotDropdown() {
 
 // スポット選択時の処理
 function highlightSpot(spotIndex) {
+    console.log('=== highlightSpot 開始 ===');
+    console.log('spotIndex:', spotIndex);
+
     // 以前の選択をリセット
     resetSpotHighlight();
 
     if (spotIndex === '' || spotIndex === null || spotIndex === undefined) {
+        console.log('spotIndexが無効なため処理を終了');
         document.getElementById('selectedSpotName').value = '';
         return;
     }
 
     const spot = allSpots[spotIndex];
-    if (!spot) return;
+    console.log('選択されたスポット:', spot);
+    if (!spot) {
+        console.log('spotが見つからないため処理を終了');
+        return;
+    }
 
     selectedSpotFeature = spot.feature;
 
@@ -1517,76 +1525,110 @@ function highlightSpot(spotIndex) {
     // マーカーの色を水色に変更
     const featureType = spot.feature.properties && spot.feature.properties.type;
     const geometryType = spot.feature.geometry && spot.feature.geometry.type;
+    console.log('featureType:', featureType);
+    console.log('geometryType:', geometryType);
 
     // 'spot' と 'スポット' の双方をスポットとして扱う
     const isSpotType = featureType === 'spot' || featureType === 'スポット';
+    console.log('isSpotType:', isSpotType);
 
     // markerMapからマーカーを探す（spotの場合）
     if (geometryType === 'Point' && isSpotType) {
+        console.log('Point型スポットの処理を開始');
         // spotマーカーを検索（divIconの場合）
         geoJsonLayer.eachLayer(layer => {
             if (layer.feature === spot.feature) {
                 selectedSpotMarker = layer;
+                console.log('マーカーを発見:', layer);
                 // divIconの場合、DOM要素を直接操作
                 if (layer.getElement) {
                     const element = layer.getElement();
+                    console.log('getElement()取得:', element);
                     if (element) {
                         const div = element.querySelector('div');
+                        console.log('div要素取得:', div);
                         if (div) {
                             // !importantを使って確実に色を変更
                             div.style.setProperty('background-color', '#00ffff', 'important');
+                            console.log('色を水色に変更しました');
+                        } else {
+                            console.log('div要素が見つかりませんでした');
                         }
                     }
                 } else if (layer.setStyle) {
                     layer.setStyle({ fillColor: '#00ffff', color: '#00ffff' });
+                    console.log('setStyle()で色を変更しました');
                 }
             }
         });
     } else if (geometryType === 'Polygon' || geometryType === 'MultiPolygon') {
+        console.log('Polygon/MultiPolygon型スポットの処理を開始');
         // ポリゴンの場合
         geoJsonLayer.eachLayer(layer => {
             if (layer.feature === spot.feature) {
                 selectedSpotMarker = layer;
+                console.log('ポリゴンマーカーを発見:', layer);
                 if (layer.setStyle) {
                     layer.setStyle({ fillColor: '#00ffff', color: '#00ffff' });
+                    console.log('ポリゴンの色を水色に変更しました');
                 }
             }
         });
     }
+    console.log('=== highlightSpot 終了 ===');
 }
 
 // スポットハイライトのリセット
 function resetSpotHighlight() {
-    if (!selectedSpotMarker || !selectedSpotFeature) return;
+    console.log('=== resetSpotHighlight 開始 ===');
+    console.log('selectedSpotMarker:', selectedSpotMarker);
+    console.log('selectedSpotFeature:', selectedSpotFeature);
+
+    if (!selectedSpotMarker || !selectedSpotFeature) {
+        console.log('リセット対象がないため処理を終了');
+        return;
+    }
 
     const featureType = selectedSpotFeature.properties && selectedSpotFeature.properties.type;
     const geometryType = selectedSpotFeature.geometry && selectedSpotFeature.geometry.type;
     const isSpotType = featureType === 'spot' || featureType === 'スポット';
+    console.log('featureType:', featureType);
+    console.log('geometryType:', geometryType);
+    console.log('isSpotType:', isSpotType);
 
     // マーカーを元の色に戻す
     if (geometryType === 'Point' && isSpotType) {
+        console.log('Point型スポットのリセット処理を開始');
         // divIconの場合、DOM要素を直接操作
         if (selectedSpotMarker.getElement) {
             const element = selectedSpotMarker.getElement();
+            console.log('getElement()取得:', element);
             if (element) {
                 const div = element.querySelector('div');
+                console.log('div要素取得:', div);
                 if (div) {
                     // 定数のデフォルト色に戻す（!importantを使って確実に色を変更）
                     const defaultColor = (DEFAULTS && DEFAULTS.FEATURE_STYLES && DEFAULTS.FEATURE_STYLES['spot'] && DEFAULTS.FEATURE_STYLES['spot'].fillColor) || '#0000ff';
+                    console.log('デフォルト色:', defaultColor);
                     div.style.setProperty('background-color', defaultColor, 'important');
+                    console.log('色をデフォルトに戻しました');
                 }
             }
         } else if (selectedSpotMarker.setStyle) {
             selectedSpotMarker.setStyle(DEFAULTS.FEATURE_STYLES['spot']);
+            console.log('setStyle()で色をリセットしました');
         }
     } else if (geometryType === 'Polygon' || geometryType === 'MultiPolygon') {
+        console.log('Polygon/MultiPolygon型スポットのリセット処理を開始');
         if (selectedSpotMarker.setStyle) {
             selectedSpotMarker.setStyle(DEFAULTS.LINE_STYLE);
+            console.log('ポリゴンの色をリセットしました');
         }
     }
 
     selectedSpotFeature = null;
     selectedSpotMarker = null;
+    console.log('=== resetSpotHighlight 終了 ===');
 }
 
 // スポットドロップダウンの変更イベントリスナー
