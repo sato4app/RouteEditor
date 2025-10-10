@@ -1771,6 +1771,14 @@ function addSpotToMap(latlng) {
     // スポットドロップダウンを更新
     updateSpotDropdown();
 
+    // 追加したスポットを自動選択してハイライト
+    const spotIndex = allSpots.findIndex(spot => spot.feature === newSpotFeature);
+    if (spotIndex !== -1) {
+        document.getElementById('spotSelect').value = spotIndex;
+        highlightSpot(spotIndex);
+        console.log('追加したスポットを自動選択:', newSpotName, 'index:', spotIndex);
+    }
+
     // 統計情報を更新
     updateStats(loadedData);
 }
