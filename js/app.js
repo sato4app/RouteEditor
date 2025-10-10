@@ -1535,11 +1535,25 @@ function highlightSpot(spotIndex) {
     // markerMapからマーカーを探す（spotの場合）
     if (geometryType === 'Point' && isSpotType) {
         console.log('Point型スポットの処理を開始');
+        console.log('検索対象のspot.feature:', spot.feature);
+
+        let layerCount = 0;
+        let foundMarker = false;
+
         // spotマーカーを検索（divIconの場合）
         geoJsonLayer.eachLayer(layer => {
+            layerCount++;
+            console.log(`レイヤー[${layerCount}]:`, layer);
+            console.log(`  - layer.feature:`, layer.feature);
+            console.log(`  - 同一性チェック(===):`, layer.feature === spot.feature);
+            console.log(`  - feature.properties比較:`,
+                layer.feature?.properties?.name, '===', spot.feature?.properties?.name,
+                '→', layer.feature?.properties?.name === spot.feature?.properties?.name);
+
             if (layer.feature === spot.feature) {
+                foundMarker = true;
                 selectedSpotMarker = layer;
-                console.log('マーカーを発見:', layer);
+                console.log('✓ マーカーを発見(===で一致):', layer);
                 // divIconの場合、DOM要素を直接操作
                 if (layer.getElement) {
                     const element = layer.getElement();
@@ -1561,6 +1575,11 @@ function highlightSpot(spotIndex) {
                 }
             }
         });
+
+        console.log(`検索結果: 合計${layerCount}個のレイヤーを検索`);
+        if (!foundMarker) {
+            console.warn('⚠ マーカーが見つかりませんでした（===での一致なし）');
+        }
     } else if (geometryType === 'Polygon' || geometryType === 'MultiPolygon') {
         console.log('Polygon/MultiPolygon型スポットの処理を開始');
         // ポリゴンの場合
