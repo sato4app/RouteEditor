@@ -1533,7 +1533,8 @@ function highlightSpot(spotIndex) {
                     if (element) {
                         const div = element.querySelector('div');
                         if (div) {
-                            div.style.backgroundColor = '#00ffff';
+                            // !importantを使って確実に色を変更
+                            div.style.setProperty('background-color', '#00ffff', 'important');
                         }
                     }
                 } else if (layer.setStyle) {
@@ -1570,9 +1571,9 @@ function resetSpotHighlight() {
             if (element) {
                 const div = element.querySelector('div');
                 if (div) {
-                    // 定数のデフォルト色に戻す
+                    // 定数のデフォルト色に戻す（!importantを使って確実に色を変更）
                     const defaultColor = (DEFAULTS && DEFAULTS.FEATURE_STYLES && DEFAULTS.FEATURE_STYLES['spot'] && DEFAULTS.FEATURE_STYLES['spot'].fillColor) || '#0000ff';
-                    div.style.backgroundColor = defaultColor;
+                    div.style.setProperty('background-color', defaultColor, 'important');
                 }
             }
         } else if (selectedSpotMarker.setStyle) {
