@@ -88,6 +88,7 @@ let allPoints = []; // 全ポイントのリスト
 let allRoutes = []; // 全ルートのリスト（開始点～終了点のペア）
 let selectedRouteId = null; // 選択中のルートID
 let markerMap = new Map(); // フィーチャーID/route_idをキーにしたマーカーのマップ
+let spotMarkerMap = new Map(); // スポットのfeatureをキーにしたマーカーのマップ
 let selectedRouteLine = null; // 選択中のルート線（Leafletポリライン）
 let isAddMode = false; // 追加モードフラグ
 let mapClickHandler = null; // 地図クリックイベントハンドラー
@@ -646,6 +647,7 @@ document.getElementById('fileInput').addEventListener('change', async function(e
                 // 既存のレイヤーをクリア
                 geoJsonLayer.clearLayers();
                 markerMap.clear();
+                spotMarkerMap.clear();
 
                 // GeoJSONデータを地図に追加
                 L.geoJSON(geoJsonData, {
@@ -723,6 +725,11 @@ document.getElementById('fileInput').addEventListener('change', async function(e
                         // スポット（Polygon または type='spot' のPoint）のクリックイベント
                         if ((geometryType === 'Polygon' || geometryType === 'MultiPolygon') ||
                             (geometryType === 'Point' && featureType === 'spot')) {
+
+                            // spotMarkerMapに登録（featureをキーにしてレイヤーを保存）
+                            spotMarkerMap.set(feature, layer);
+                            console.log('スポットマーカーをspotMarkerMapに登録:', feature.properties?.name, layer);
+
                             layer.on('click', function(e) {
                                 // スポットモードの場合のみ処理
                                 const currentMode = document.querySelector('input[name="mode"]:checked').value;
@@ -1532,67 +1539,46 @@ function highlightSpot(spotIndex) {
     const isSpotType = featureType === 'spot' || featureType === 'スポット';
     console.log('isSpotType:', isSpotType);
 
-    // markerMapからマーカーを探す（spotの場合）
+    // spotMarkerMapから直接マーカーを取得
+    const layer = spotMarkerMap.get(spot.feature);
+    console.log('spotMarkerMapからマーカー取得:', layer);
+
+    if (!layer) {
+        console.warn('⚠ spotMarkerMapにマーカーが見つかりませんでした');
+        console.log('spotMarkerMapの内容:', spotMarkerMap);
+        return;
+    }
+
+    selectedSpotMarker = layer;
+
+    // マーカーの色を水色に変更
     if (geometryType === 'Point' && isSpotType) {
         console.log('Point型スポットの処理を開始');
-        console.log('検索対象のspot.feature:', spot.feature);
-
-        let layerCount = 0;
-        let foundMarker = false;
-
-        // spotマーカーを検索（divIconの場合）
-        geoJsonLayer.eachLayer(layer => {
-            layerCount++;
-            console.log(`レイヤー[${layerCount}]:`, layer);
-            console.log(`  - layer.feature:`, layer.feature);
-            console.log(`  - 同一性チェック(===):`, layer.feature === spot.feature);
-            console.log(`  - feature.properties比較:`,
-                layer.feature?.properties?.name, '===', spot.feature?.properties?.name,
-                '→', layer.feature?.properties?.name === spot.feature?.properties?.name);
-
-            if (layer.feature === spot.feature) {
-                foundMarker = true;
-                selectedSpotMarker = layer;
-                console.log('✓ マーカーを発見(===で一致):', layer);
-                // divIconの場合、DOM要素を直接操作
-                if (layer.getElement) {
-                    const element = layer.getElement();
-                    console.log('getElement()取得:', element);
-                    if (element) {
-                        const div = element.querySelector('div');
-                        console.log('div要素取得:', div);
-                        if (div) {
-                            // !importantを使って確実に色を変更
-                            div.style.setProperty('background-color', '#00ffff', 'important');
-                            console.log('色を水色に変更しました');
-                        } else {
-                            console.log('div要素が見つかりませんでした');
-                        }
-                    }
-                } else if (layer.setStyle) {
-                    layer.setStyle({ fillColor: '#00ffff', color: '#00ffff' });
-                    console.log('setStyle()で色を変更しました');
+        // divIconの場合、DOM要素を直接操作
+        if (layer.getElement) {
+            const element = layer.getElement();
+            console.log('getElement()取得:', element);
+            if (element) {
+                const div = element.querySelector('div');
+                console.log('div要素取得:', div);
+                if (div) {
+                    // !importantを使って確実に色を変更
+                    div.style.setProperty('background-color', '#00ffff', 'important');
+                    console.log('色を水色に変更しました');
+                } else {
+                    console.log('div要素が見つかりませんでした');
                 }
             }
-        });
-
-        console.log(`検索結果: 合計${layerCount}個のレイヤーを検索`);
-        if (!foundMarker) {
-            console.warn('⚠ マーカーが見つかりませんでした（===での一致なし）');
+        } else if (layer.setStyle) {
+            layer.setStyle({ fillColor: '#00ffff', color: '#00ffff' });
+            console.log('setStyle()で色を変更しました');
         }
     } else if (geometryType === 'Polygon' || geometryType === 'MultiPolygon') {
         console.log('Polygon/MultiPolygon型スポットの処理を開始');
-        // ポリゴンの場合
-        geoJsonLayer.eachLayer(layer => {
-            if (layer.feature === spot.feature) {
-                selectedSpotMarker = layer;
-                console.log('ポリゴンマーカーを発見:', layer);
-                if (layer.setStyle) {
-                    layer.setStyle({ fillColor: '#00ffff', color: '#00ffff' });
-                    console.log('ポリゴンの色を水色に変更しました');
-                }
-            }
-        });
+        if (layer.setStyle) {
+            layer.setStyle({ fillColor: '#00ffff', color: '#00ffff' });
+            console.log('ポリゴンの色を水色に変更しました');
+        }
     }
     console.log('=== highlightSpot 終了 ===');
 }
@@ -1771,6 +1757,10 @@ function addSpotToMap(latlng) {
 
     // マーカーにフィーチャー情報を保存
     marker.feature = newSpotFeature;
+
+    // spotMarkerMapに登録
+    spotMarkerMap.set(newSpotFeature, marker);
+    console.log('新規スポットをspotMarkerMapに登録:', newSpotName, marker);
 
     // allSpotsに追加
     allSpots.push({
@@ -1955,6 +1945,12 @@ document.getElementById('deleteSpotBtn').addEventListener('click', function() {
     // 地図からマーカーを削除
     if (selectedSpotMarker) {
         map.removeLayer(selectedSpotMarker);
+    }
+
+    // spotMarkerMapから削除
+    if (selectedSpotFeature) {
+        spotMarkerMap.delete(selectedSpotFeature);
+        console.log('spotMarkerMapからスポットを削除:', spotName);
     }
 
     // allSpotsから削除
