@@ -1699,13 +1699,13 @@ function exitAddSpotMode() {
 function addSpotToMap(latlng) {
     if (!loadedData) return;
 
-    // 新しいスポット名を生成（Spot-1, Spot-2, ...）
+    // 新しいスポット名を生成（仮1, 仮2, ...）
     let spotNumber = 1;
     let newSpotName = '';
     let nameExists = true;
 
     while (nameExists) {
-        newSpotName = `Spot-${spotNumber}`;
+        newSpotName = `仮${spotNumber}`;
         nameExists = allSpots.some(spot => spot.name === newSpotName);
         if (nameExists) spotNumber++;
     }
