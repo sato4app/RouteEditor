@@ -408,6 +408,13 @@ export function redrawWaypointMarkers(routeId, loadedData, markerMap, geoJsonLay
     const waypointMarkers = markerMap.get(routeId);
     if (Array.isArray(waypointMarkers)) {
         waypointMarkers.forEach(marker => {
+            // ドラッグを確実に無効化
+            if (marker.dragging) {
+                marker.dragging.disable();
+            }
+            // すべてのイベントリスナーを削除
+            marker.off();
+            // レイヤーから削除
             geoJsonLayer.removeLayer(marker);
         });
         markerMap.delete(routeId);
@@ -588,6 +595,11 @@ export function makeWaypointsClickableForMove(routeId, loadedData, markerMap, ma
             if (element) {
                 element.style.cursor = 'pointer';
 
+                // 既存のイベントハンドラーを削除してから新しいものを追加
+                marker.off('click');
+                marker.off('drag');
+                marker.off('dragend');
+
                 marker.on('click', function(e) {
                     if (!isMoveMode) return;
 
@@ -622,14 +634,24 @@ export function makeWaypointsClickableForMove(routeId, loadedData, markerMap, ma
                         const newLatLng = marker.getLatLng();
                         updateWaypointCoordinates(routeId, index, newLatLng, loadedData);
 
-                        // ドラッグを無効化
+                        // ドラッグを無効化してイベントをクリア
                         if (marker.dragging) {
                             marker.dragging.disable();
+                        }
+                        marker.off('drag');
+                        marker.off('dragend');
+                        marker.off('click');
+
+                        // カーソルをリセット
+                        const el = marker.getElement && marker.getElement();
+                        if (el) {
+                            el.style.cursor = '';
                         }
 
                         // ドラッグ可能マーカーをクリア（古いマーカーへの参照を削除）
                         setDraggableMarkers([]);
 
+                        // ルートを最適化（この中でマーカーが再作成される）
                         optimizeRoute(routeId, false, loadedData, markerMap);
                         redrawRouteLine(routeId, loadedData, map);
 
