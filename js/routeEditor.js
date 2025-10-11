@@ -623,6 +623,11 @@ export function makeWaypointsClickableForMove(routeId, loadedData, markerMap, ma
                         updateWaypointCoordinates(routeId, index, newLatLng, loadedData);
                         optimizeRoute(routeId, false, loadedData, markerMap);
                         redrawRouteLine(routeId, loadedData, map);
+
+                        // マーカーが再描画された後、再度クリック可能にする
+                        if (isMoveMode) {
+                            makeWaypointsClickableForMove(routeId, loadedData, markerMap, map);
+                        }
                     });
 
                     const updatedMarkers = [...draggableMarkers, marker];
