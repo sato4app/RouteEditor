@@ -918,6 +918,24 @@ document.getElementById('routeEnd').addEventListener('change', function() {
 document.getElementById('routePath').addEventListener('change', function() {
     const selectedRouteId = this.value;
     highlightRoute(selectedRouteId);
+
+    // 移動モードが有効な場合、新しく選択されたルートの中間点をドラッグ可能にする
+    if (isMoveMode && selectedRouteId) {
+        // 以前のドラッグ可能マーカーを無効化
+        draggableMarkers.forEach(marker => {
+            if (marker && marker.dragging) {
+                marker.dragging.disable();
+            }
+            const element = marker.getElement && marker.getElement();
+            if (element) {
+                element.style.cursor = '';
+            }
+        });
+        draggableMarkers = [];
+
+        // 新しいルートの中間点をドラッグ可能にする
+        makeWaypointsDraggable(selectedRouteId);
+    }
 });
 
 // 追加モードを解除する関数
