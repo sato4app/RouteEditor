@@ -447,6 +447,9 @@ function addWaypointToRoute(routeId, latlng) {
 
     // route-path-dropdownを更新（中間点数が変わったため）
     updateRoutePathDropdown();
+
+    // ルートを最適化（メッセージ表示なし）
+    optimizeRoute(routeId, false);
 }
 
 // ルート線を再描画する関数
@@ -969,6 +972,11 @@ function makeWaypointsDraggable(routeId) {
                 marker.on('dragend', function(e) {
                     const newLatLng = marker.getLatLng();
                     updateWaypointCoordinates(routeId, index, newLatLng);
+
+                    // ルートを最適化（メッセージ表示なし）
+                    optimizeRoute(routeId, false);
+
+                    // 最適化後にルート線を再描画
                     redrawRouteLine(routeId);
                 });
 
@@ -1059,6 +1067,9 @@ function deleteWaypoint(routeId, marker) {
             }
         }
 
+        // ルートを最適化（メッセージ表示なし）
+        optimizeRoute(routeId, false);
+
         // ルート線を再描画
         redrawRouteLine(routeId);
 
@@ -1135,7 +1146,7 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
 }
 
 // ルートを最適化する関数（貪欲法：最短距離の点を順次選択）
-function optimizeRoute(routeId) {
+function optimizeRoute(routeId, showMessages = true) {
     if (!loadedData || !loadedData.features) return;
 
     const match = routeId.match(/^route_(.+)_to_(.+)$/);
@@ -1153,7 +1164,9 @@ function optimizeRoute(routeId) {
     );
 
     if (!startFeature || !endFeature) {
-        showMessage('開始ポイントまたは終了ポイントが見つかりません', 'error');
+        if (showMessages) {
+            showMessage('開始ポイントまたは終了ポイントが見つかりません', 'error');
+        }
         return;
     }
 
@@ -1166,7 +1179,7 @@ function optimizeRoute(routeId) {
     );
 
     if (waypoints.length === 0) {
-        showMessage('最適化する中間点がありません', 'warning');
+        // 中間点がない場合は何もしない（メッセージも表示しない）
         return;
     }
 
@@ -1206,7 +1219,9 @@ function optimizeRoute(routeId) {
     // マーカーを再描画
     redrawWaypointMarkers(routeId);
 
-    showMessage(`ルートを最適化しました（${optimizedWaypoints.length}個の中間点）`, 'success');
+    if (showMessages) {
+        showMessage(`ルートを最適化しました（${optimizedWaypoints.length}個の中間点）`, 'success');
+    }
 }
 
 // ルート編集モードのイベントハンドラー
