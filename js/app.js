@@ -1504,10 +1504,18 @@ function updateSpotDropdown() {
 
 // スポット選択時の処理
 function highlightSpot(spotIndex) {
-    // 以前の選択をリセット
-    resetSpotHighlight();
+    // 以前の選択の情報を保存してからリセット
+    const previousSpotMarker = selectedSpotMarker;
+    const previousSpotFeature = selectedSpotFeature;
 
+    // 新しい選択が空の場合
     if (spotIndex === '' || spotIndex === null || spotIndex === undefined) {
+        // 以前の選択をリセット
+        if (previousSpotMarker && previousSpotFeature) {
+            resetSpotHighlightWithParams(previousSpotMarker, previousSpotFeature);
+        }
+        selectedSpotFeature = null;
+        selectedSpotMarker = null;
         document.getElementById('selectedSpotName').value = '';
         return;
     }
@@ -1517,7 +1525,22 @@ function highlightSpot(spotIndex) {
         return;
     }
 
+    // 新しいスポットを設定
     selectedSpotFeature = spot.feature;
+
+    // spotMarkerMapから直接マーカーを取得
+    const layer = spotMarkerMap.get(spot.feature);
+
+    if (!layer) {
+        return;
+    }
+
+    selectedSpotMarker = layer;
+
+    // 以前の選択をリセット（新しい選択情報を設定した後）
+    if (previousSpotMarker && previousSpotFeature && previousSpotMarker !== selectedSpotMarker) {
+        resetSpotHighlightWithParams(previousSpotMarker, previousSpotFeature);
+    }
 
     // テキストボックスに名称を表示
     document.getElementById('selectedSpotName').value = spot.name;
@@ -1528,15 +1551,6 @@ function highlightSpot(spotIndex) {
 
     // 'spot' と 'スポット' の双方をスポットとして扱う
     const isSpotType = featureType === 'spot' || featureType === 'スポット';
-
-    // spotMarkerMapから直接マーカーを取得
-    const layer = spotMarkerMap.get(spot.feature);
-
-    if (!layer) {
-        return;
-    }
-
-    selectedSpotMarker = layer;
 
     // マーカーの色を水色に変更
     if (geometryType === 'Point' && isSpotType) {
@@ -1576,21 +1590,21 @@ function highlightSpot(spotIndex) {
     }
 }
 
-// スポットハイライトのリセット
-function resetSpotHighlight() {
-    if (!selectedSpotMarker || !selectedSpotFeature) {
+// スポットハイライトのリセット（パラメータ付き）
+function resetSpotHighlightWithParams(marker, feature) {
+    if (!marker || !feature) {
         return;
     }
 
-    const featureType = selectedSpotFeature.properties && selectedSpotFeature.properties.type;
-    const geometryType = selectedSpotFeature.geometry && selectedSpotFeature.geometry.type;
+    const featureType = feature.properties && feature.properties.type;
+    const geometryType = feature.geometry && feature.geometry.type;
     const isSpotType = featureType === 'spot' || featureType === 'スポット';
 
     // マーカーを元の色に戻す
     if (geometryType === 'Point' && isSpotType) {
         // divIconの場合、DOM要素を直接操作
-        if (selectedSpotMarker.getElement) {
-            const element = selectedSpotMarker.getElement();
+        if (marker.getElement) {
+            const element = marker.getElement();
             if (element) {
                 const div = element.querySelector('div');
                 if (div) {
@@ -1599,14 +1613,23 @@ function resetSpotHighlight() {
                     div.style.setProperty('background-color', defaultColor, 'important');
                 }
             }
-        } else if (selectedSpotMarker.setStyle) {
-            selectedSpotMarker.setStyle(DEFAULTS.FEATURE_STYLES['spot']);
+        } else if (marker.setStyle) {
+            marker.setStyle(DEFAULTS.FEATURE_STYLES['spot']);
         }
     } else if (geometryType === 'Polygon' || geometryType === 'MultiPolygon') {
-        if (selectedSpotMarker.setStyle) {
-            selectedSpotMarker.setStyle(DEFAULTS.LINE_STYLE);
+        if (marker.setStyle) {
+            marker.setStyle(DEFAULTS.LINE_STYLE);
         }
     }
+}
+
+// スポットハイライトのリセット（既存の関数、互換性のため維持）
+function resetSpotHighlight() {
+    if (!selectedSpotMarker || !selectedSpotFeature) {
+        return;
+    }
+
+    resetSpotHighlightWithParams(selectedSpotMarker, selectedSpotFeature);
 
     selectedSpotFeature = null;
     selectedSpotMarker = null;
