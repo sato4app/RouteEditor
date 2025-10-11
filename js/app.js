@@ -11,7 +11,8 @@ function showMessage(message, type = 'success') {
     // メッセージ要素を作成
     const msgDiv = document.createElement('div');
     msgDiv.className = `toast-message ${type}`;
-    msgDiv.textContent = message;
+    // \nを<br>に変換して改行を有効化
+    msgDiv.innerHTML = message.replace(/\n/g, '<br>');
     document.body.appendChild(msgDiv);
 
     // タイプによって表示時間を変更
