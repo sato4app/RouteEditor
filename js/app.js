@@ -919,22 +919,36 @@ document.getElementById('routePath').addEventListener('change', function() {
     const selectedRouteId = this.value;
     highlightRoute(selectedRouteId);
 
-    // 移動モードが有効な場合、新しく選択されたルートの中間点をドラッグ可能にする
+    // 移動モードが有効な場合、新しく選択されたルートの中間点をクリック可能にする
     if (isMoveMode && selectedRouteId) {
-        // 以前のドラッグ可能マーカーを無効化
+        // 以前のルートの中間点のイベントとスタイルをリセット
+        const previousRouteId = document.getElementById('routePath').options[document.getElementById('routePath').selectedIndex - 1]?.value;
+        if (previousRouteId) {
+            const previousMarkers = markerMap.get(previousRouteId);
+            if (Array.isArray(previousMarkers)) {
+                previousMarkers.forEach(marker => {
+                    if (marker && marker.dragging) {
+                        marker.dragging.disable();
+                    }
+                    const element = marker.getElement && marker.getElement();
+                    if (element) {
+                        element.style.cursor = '';
+                    }
+                    marker.off('click');
+                });
+            }
+        }
+
+        // ドラッグ可能マーカーをリセット
         draggableMarkers.forEach(marker => {
             if (marker && marker.dragging) {
                 marker.dragging.disable();
             }
-            const element = marker.getElement && marker.getElement();
-            if (element) {
-                element.style.cursor = '';
-            }
         });
         draggableMarkers = [];
 
-        // 新しいルートの中間点をドラッグ可能にする
-        makeWaypointsDraggable(selectedRouteId);
+        // 新しいルートの中間点をクリック可能にする
+        makeWaypointsClickableForMove(selectedRouteId);
     }
 });
 
@@ -958,47 +972,70 @@ function exitAddMode() {
     map.getContainer().style.cursor = '';
 }
 
-// 中間点をドラッグ可能にする関数
-function makeWaypointsDraggable(routeId) {
+// 中間点をクリック可能にする関数（移動モード用）
+function makeWaypointsClickableForMove(routeId) {
     const waypointMarkers = markerMap.get(routeId);
     if (!Array.isArray(waypointMarkers)) return;
-
-    draggableMarkers = [];
 
     waypointMarkers.forEach((marker, index) => {
         // divIconを使用しているマーカーを扱う
         if (marker && marker.getElement) {
             const element = marker.getElement();
             if (element) {
-                element.style.cursor = 'move';
+                element.style.cursor = 'pointer';
 
-                // ドラッグ機能を追加
-                marker.dragging = marker.dragging || new L.Handler.MarkerDrag(marker);
-                marker.dragging.enable();
+                // クリックイベントを追加
+                marker.on('click', function(e) {
+                    if (!isMoveMode) return;
 
-                // ドラッグ中のイベント
-                marker.on('drag', function(e) {
-                    // GeoJSONデータの座標を更新
-                    const newLatLng = marker.getLatLng();
-                    updateWaypointCoordinates(routeId, index, newLatLng);
+                    // イベントの伝播を停止（地図のクリックイベントを防ぐ）
+                    L.DomEvent.stopPropagation(e);
 
-                    // ルート線を再描画
-                    redrawRouteLine(routeId);
+                    // 以前のドラッグ可能マーカーを無効化
+                    if (draggableMarkers.length > 0) {
+                        draggableMarkers.forEach(m => {
+                            if (m && m.dragging) {
+                                m.dragging.disable();
+                            }
+                            const el = m.getElement && m.getElement();
+                            if (el) {
+                                el.style.cursor = 'pointer';
+                            }
+                        });
+                        draggableMarkers = [];
+                    }
+
+                    // このマーカーをドラッグ可能にする
+                    element.style.cursor = 'move';
+                    marker.dragging = marker.dragging || new L.Handler.MarkerDrag(marker);
+                    marker.dragging.enable();
+
+                    // ドラッグ中のイベント
+                    marker.off('drag'); // 既存のイベントを削除
+                    marker.on('drag', function(e) {
+                        // GeoJSONデータの座標を更新
+                        const newLatLng = marker.getLatLng();
+                        updateWaypointCoordinates(routeId, index, newLatLng);
+
+                        // ルート線を再描画
+                        redrawRouteLine(routeId);
+                    });
+
+                    // ドラッグ終了時のイベント
+                    marker.off('dragend'); // 既存のイベントを削除
+                    marker.on('dragend', function(e) {
+                        const newLatLng = marker.getLatLng();
+                        updateWaypointCoordinates(routeId, index, newLatLng);
+
+                        // ルートを最適化（メッセージ表示なし）
+                        optimizeRoute(routeId, false);
+
+                        // 最適化後にルート線を再描画
+                        redrawRouteLine(routeId);
+                    });
+
+                    draggableMarkers.push(marker);
                 });
-
-                // ドラッグ終了時のイベント
-                marker.on('dragend', function(e) {
-                    const newLatLng = marker.getLatLng();
-                    updateWaypointCoordinates(routeId, index, newLatLng);
-
-                    // ルートを最適化（メッセージ表示なし）
-                    optimizeRoute(routeId, false);
-
-                    // 最適化後にルート線を再描画
-                    redrawRouteLine(routeId);
-                });
-
-                draggableMarkers.push(marker);
             }
         }
     });
@@ -1033,16 +1070,25 @@ function exitMoveMode() {
     const moveBtn = document.getElementById('moveRouteBtn');
     moveBtn.classList.remove('active');
 
-    // 全てのドラッグ可能マーカーのドラッグを無効化
-    draggableMarkers.forEach(marker => {
-        if (marker && marker.dragging) {
-            marker.dragging.disable();
+    // 選択中のルートがある場合、すべての中間点のイベントとスタイルをリセット
+    if (selectedRouteId) {
+        const waypointMarkers = markerMap.get(selectedRouteId);
+        if (Array.isArray(waypointMarkers)) {
+            waypointMarkers.forEach(marker => {
+                // ドラッグを無効化
+                if (marker && marker.dragging) {
+                    marker.dragging.disable();
+                }
+                // カーソルをリセット
+                const element = marker.getElement && marker.getElement();
+                if (element) {
+                    element.style.cursor = '';
+                }
+                // クリックイベントを削除
+                marker.off('click');
+            });
         }
-        const element = marker.getElement && marker.getElement();
-        if (element) {
-            element.style.cursor = '';
-        }
-    });
+    }
 
     draggableMarkers = [];
 
@@ -1318,10 +1364,10 @@ document.getElementById('moveRouteBtn').addEventListener('click', function() {
     isMoveMode = true;
     this.classList.add('active');
 
-    // 中間点をドラッグ可能にする
-    makeWaypointsDraggable(path);
+    // 中間点をクリック可能にする（移動モード用）
+    makeWaypointsClickableForMove(path);
 
-    showMessage('中間点をドラッグして移動できます。移動ボタンをもう一度クリックで解除', 'success');
+    showMessage('移動する中間点をクリックしてください。選択後、ドラッグして移動できます。\n移動ボタンをもう一度クリックで解除', 'success');
 });
 
 document.getElementById('deleteRouteBtn').addEventListener('click', function() {
