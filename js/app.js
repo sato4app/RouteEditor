@@ -865,6 +865,26 @@ document.querySelectorAll('input[name="mode"]').forEach(radio => {
             this.nextElementSibling.classList.add('selected');
         }
 
+        // スポットモードから離れる場合、スポット関連の状態をリセット
+        if (this.value !== MODES.SPOT) {
+            // スポットのハイライトをリセット
+            resetSpotHighlight();
+
+            // スポットの追加モードを解除
+            if (isAddSpotMode) {
+                exitAddSpotMode();
+            }
+
+            // スポットの移動モードを解除
+            if (isMoveSpotMode) {
+                exitMoveSpotMode();
+            }
+
+            // スポットドロップダウンの選択をクリア
+            document.getElementById('spotSelect').value = '';
+            document.getElementById('selectedSpotName').value = '';
+        }
+
         // パネルの表示切り替え
         const geojsonPanel = document.getElementById('geojsonPanel');
         const routePanel = document.getElementById('routePanel');
