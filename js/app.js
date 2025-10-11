@@ -870,14 +870,9 @@ document.querySelectorAll('input[name="mode"]').forEach(radio => {
             // スポットのハイライトをリセット
             resetSpotHighlight();
 
-            // スポットの追加モードを解除
-            if (isAddSpotMode) {
-                exitAddSpotMode();
-            }
-
-            // スポットの移動モードを解除
-            if (isMoveSpotMode) {
-                exitMoveSpotMode();
+            // スポットの追加・移動モードを解除
+            if (isAddMoveSpotMode) {
+                exitAddMoveSpotMode();
             }
 
             // スポットドロップダウンの選択をクリア
@@ -1593,8 +1588,8 @@ function highlightSpot(spotIndex) {
         }
     }
 
-    // 移動モードが有効な場合、新しく選択したスポットをドラッグ可能にする
-    if (isMoveSpotMode) {
+    // 追加・移動モードが有効な場合、新しく選択したスポットをドラッグ可能にする
+    if (isAddMoveSpotMode) {
         // 以前のドラッグ可能マーカーを無効化
         if (draggableSpotMarker && draggableSpotMarker !== selectedSpotMarker) {
             if (draggableSpotMarker.dragging) {
@@ -1690,24 +1685,36 @@ document.getElementById('selectedSpotName').addEventListener('blur', function() 
     showMessage('スポット名を更新しました', 'success');
 });
 
-// スポット追加モードの状態管理
-let isAddSpotMode = false;
+// スポット追加・移動モードの状態管理
+let isAddMoveSpotMode = false;
 let spotMapClickHandler = null;
 
-// スポット追加モードを解除する関数
-function exitAddSpotMode() {
-    if (!isAddSpotMode) return;
+// スポット追加・移動モードを解除する関数
+function exitAddMoveSpotMode() {
+    if (!isAddMoveSpotMode) return;
 
-    isAddSpotMode = false;
+    isAddMoveSpotMode = false;
 
     // ボタンの押下状態を解除
-    const addBtn = document.getElementById('addSpotBtn');
-    addBtn.classList.remove('active');
+    const addMoveBtn = document.getElementById('addMoveSpotBtn');
+    addMoveBtn.classList.remove('active');
 
     // 地図クリックイベントを削除
     if (spotMapClickHandler) {
         map.off('click', spotMapClickHandler);
         spotMapClickHandler = null;
+    }
+
+    // ドラッグ可能なマーカーのドラッグを無効化
+    if (draggableSpotMarker) {
+        if (draggableSpotMarker.dragging) {
+            draggableSpotMarker.dragging.disable();
+        }
+        const element = draggableSpotMarker.getElement && draggableSpotMarker.getElement();
+        if (element) {
+            element.style.cursor = '';
+        }
+        draggableSpotMarker = null;
     }
 
     // カーソルを通常に戻す
@@ -1800,12 +1807,12 @@ function addSpotToMap(latlng) {
     updateStats(loadedData);
 }
 
-// 追加ボタンのイベントハンドラー
-document.getElementById('addSpotBtn').addEventListener('click', function() {
-    // 既に追加モードの場合は解除
-    if (isAddSpotMode) {
-        exitAddSpotMode();
-        showMessage('追加モードを解除しました', 'success');
+// 追加・移動ボタンのイベントハンドラー
+document.getElementById('addMoveSpotBtn').addEventListener('click', function() {
+    // 既に追加・移動モードの場合は解除
+    if (isAddMoveSpotMode) {
+        exitAddMoveSpotMode();
+        showMessage('追加・移動モードを解除しました', 'success');
         return;
     }
 
@@ -1815,18 +1822,26 @@ document.getElementById('addSpotBtn').addEventListener('click', function() {
         return;
     }
 
-    // 追加モードを開始
-    isAddSpotMode = true;
+    // 追加・移動モードを開始
+    isAddMoveSpotMode = true;
     this.classList.add('active');
+
+    // スポットが選択されている場合は移動モードとして動作
+    if (selectedSpotFeature && selectedSpotMarker) {
+        // スポットマーカーをドラッグ可能にする
+        makeSpotDraggable(selectedSpotMarker, selectedSpotFeature);
+        showMessage('スポットをドラッグして移動できます。\n地図をクリックで新しいスポットを追加できます。\nボタンをもう一度クリックで解除', 'success');
+    } else {
+        // スポットが選択されていない場合は追加モードのみ
+        showMessage('地図上をクリックして新しいスポットを追加してください。\nボタンをもう一度クリックで解除', 'success');
+    }
 
     // カーソルを十字に変更
     map.getContainer().style.cursor = 'crosshair';
 
-    showMessage('地図上をクリックして新しいスポットを追加してください。\n追加ボタンをもう一度クリックで解除', 'success');
-
-    // 地図クリックイベントを設定
+    // 地図クリックイベントを設定（スポット追加用）
     spotMapClickHandler = function(e) {
-        if (!isAddSpotMode) return;
+        if (!isAddMoveSpotMode) return;
 
         // クリック位置に新しいスポットを追加
         addSpotToMap(e.latlng);
@@ -1837,35 +1852,9 @@ document.getElementById('addSpotBtn').addEventListener('click', function() {
     map.on('click', spotMapClickHandler);
 });
 
-// スポット移動モードの状態管理
+// スポット移動モードの状態管理（互換性のため残す）
 let isMoveSpotMode = false;
 let draggableSpotMarker = null;
-
-// スポット移動モードを解除する関数
-function exitMoveSpotMode() {
-    if (!isMoveSpotMode) return;
-
-    isMoveSpotMode = false;
-
-    // ボタンの押下状態を解除
-    const moveBtn = document.getElementById('moveSpotBtn');
-    moveBtn.classList.remove('active');
-
-    // ドラッグ可能なマーカーのドラッグを無効化
-    if (draggableSpotMarker) {
-        if (draggableSpotMarker.dragging) {
-            draggableSpotMarker.dragging.disable();
-        }
-        const element = draggableSpotMarker.getElement && draggableSpotMarker.getElement();
-        if (element) {
-            element.style.cursor = '';
-        }
-        draggableSpotMarker = null;
-    }
-
-    // カーソルを通常に戻す
-    map.getContainer().style.cursor = '';
-}
 
 // スポットマーカーをドラッグ可能にする関数
 function makeSpotDraggable(marker, feature) {
@@ -1904,36 +1893,6 @@ function makeSpotDraggable(marker, feature) {
     });
 }
 
-// 移動ボタンのイベントハンドラー
-document.getElementById('moveSpotBtn').addEventListener('click', function() {
-    // 既に移動モードの場合は解除
-    if (isMoveSpotMode) {
-        exitMoveSpotMode();
-        showMessage('移動モードを解除しました', 'success');
-        return;
-    }
-
-    // スポットが選択されていない場合
-    if (!selectedSpotFeature || !selectedSpotMarker) {
-        showMessage('移動するスポットを選択してください', 'warning');
-        return;
-    }
-
-    // 追加モードが有効な場合は解除
-    if (isAddSpotMode) {
-        exitAddSpotMode();
-    }
-
-    // 移動モードを開始
-    isMoveSpotMode = true;
-    this.classList.add('active');
-
-    // スポットマーカーをドラッグ可能にする
-    makeSpotDraggable(selectedSpotMarker, selectedSpotFeature);
-
-    showMessage('スポットをドラッグして移動できます。移動ボタンをもう一度クリックで解除', 'success');
-});
-
 // 削除ボタンのイベントハンドラー
 document.getElementById('deleteSpotBtn').addEventListener('click', function() {
     // スポットが選択されていない場合
@@ -1952,11 +1911,8 @@ document.getElementById('deleteSpotBtn').addEventListener('click', function() {
     }
 
     // 他のモードが有効な場合は解除
-    if (isAddSpotMode) {
-        exitAddSpotMode();
-    }
-    if (isMoveSpotMode) {
-        exitMoveSpotMode();
+    if (isAddMoveSpotMode) {
+        exitAddMoveSpotMode();
     }
 
     // GeoJSONデータから削除
