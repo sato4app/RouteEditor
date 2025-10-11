@@ -1558,6 +1558,22 @@ function highlightSpot(spotIndex) {
             layer.setStyle({ fillColor: '#00ffff', color: '#00ffff' });
         }
     }
+
+    // 移動モードが有効な場合、新しく選択したスポットをドラッグ可能にする
+    if (isMoveSpotMode) {
+        // 以前のドラッグ可能マーカーを無効化
+        if (draggableSpotMarker && draggableSpotMarker !== selectedSpotMarker) {
+            if (draggableSpotMarker.dragging) {
+                draggableSpotMarker.dragging.disable();
+            }
+            const element = draggableSpotMarker.getElement && draggableSpotMarker.getElement();
+            if (element) {
+                element.style.cursor = '';
+            }
+        }
+        // 新しいスポットをドラッグ可能にする
+        makeSpotDraggable(selectedSpotMarker, selectedSpotFeature);
+    }
 }
 
 // スポットハイライトのリセット
