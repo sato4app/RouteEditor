@@ -12,6 +12,27 @@ export let isAddMoveSpotMode = false;
 export let spotMapClickHandler = null;
 export let draggableSpotMarker = null;
 
+// 状態変更用のセッター関数
+export function setSelectedSpotFeature(value) {
+    selectedSpotFeature = value;
+}
+
+export function setSelectedSpotMarker(value) {
+    selectedSpotMarker = value;
+}
+
+export function setIsAddMoveSpotMode(value) {
+    isAddMoveSpotMode = value;
+}
+
+export function setSpotMapClickHandler(handler) {
+    spotMapClickHandler = handler;
+}
+
+export function setDraggableSpotMarker(marker) {
+    draggableSpotMarker = marker;
+}
+
 // スポット一覧の抽出
 export function extractSpots(geoJsonData) {
     allSpots = [];
@@ -68,8 +89,8 @@ export function highlightSpot(spotIndex, spotMarkerMap) {
         if (previousSpotMarker && previousSpotFeature) {
             resetSpotHighlightWithParams(previousSpotMarker, previousSpotFeature);
         }
-        selectedSpotFeature = null;
-        selectedSpotMarker = null;
+        setSelectedSpotFeature(null);
+        setSelectedSpotMarker(null);
         document.getElementById('selectedSpotName').value = '';
         return;
     }
@@ -79,7 +100,7 @@ export function highlightSpot(spotIndex, spotMarkerMap) {
         return;
     }
 
-    selectedSpotFeature = spot.feature;
+    setSelectedSpotFeature(spot.feature);
 
     const layer = spotMarkerMap.get(spot.feature);
 
@@ -87,7 +108,7 @@ export function highlightSpot(spotIndex, spotMarkerMap) {
         return;
     }
 
-    selectedSpotMarker = layer;
+    setSelectedSpotMarker(layer);
 
     if (previousSpotMarker && previousSpotFeature && previousSpotMarker !== selectedSpotMarker) {
         resetSpotHighlightWithParams(previousSpotMarker, previousSpotFeature);
@@ -169,8 +190,8 @@ export function resetSpotHighlight() {
 
     resetSpotHighlightWithParams(selectedSpotMarker, selectedSpotFeature);
 
-    selectedSpotFeature = null;
-    selectedSpotMarker = null;
+    setSelectedSpotFeature(null);
+    setSelectedSpotMarker(null);
 }
 
 // 新しいスポットを追加
@@ -250,7 +271,7 @@ export function addSpotToMap(latlng, loadedData, spotMarkerMap, geoJsonLayer) {
 export function makeSpotDraggable(marker, feature) {
     if (!marker) return;
 
-    draggableSpotMarker = marker;
+    setDraggableSpotMarker(marker);
 
     if (marker.getElement) {
         const element = marker.getElement();
@@ -282,14 +303,14 @@ export function makeSpotDraggable(marker, feature) {
 export function exitAddMoveSpotMode(map) {
     if (!isAddMoveSpotMode) return;
 
-    isAddMoveSpotMode = false;
+    setIsAddMoveSpotMode(false);
 
     const addMoveBtn = document.getElementById('addMoveSpotBtn');
     addMoveBtn.classList.remove('active');
 
     if (spotMapClickHandler) {
         map.off('click', spotMapClickHandler);
-        spotMapClickHandler = null;
+        setSpotMapClickHandler(null);
     }
 
     if (draggableSpotMarker) {
@@ -300,7 +321,7 @@ export function exitAddMoveSpotMode(map) {
         if (element) {
             element.style.cursor = '';
         }
-        draggableSpotMarker = null;
+        setDraggableSpotMarker(null);
     }
 
     map.getContainer().style.cursor = '';

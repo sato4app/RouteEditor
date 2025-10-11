@@ -14,6 +14,31 @@ export let isDeleteMode = false;
 export let mapClickHandler = null;
 export let draggableMarkers = [];
 
+// 状態変更用のセッター関数
+export function setIsAddMode(value) {
+    isAddMode = value;
+}
+
+export function setIsMoveMode(value) {
+    isMoveMode = value;
+}
+
+export function setIsDeleteMode(value) {
+    isDeleteMode = value;
+}
+
+export function setMapClickHandler(handler) {
+    mapClickHandler = handler;
+}
+
+export function setSelectedRouteId(value) {
+    selectedRouteId = value;
+}
+
+export function setDraggableMarkers(markers) {
+    draggableMarkers = markers;
+}
+
 // ポイントとルートの抽出
 export function extractPointsAndRoutes(geoJsonData) {
     allPoints = [];
@@ -229,7 +254,7 @@ export function highlightRoute(routeId, loadedData, markerMap, map) {
 
     if (!routeId) return;
 
-    selectedRouteId = routeId;
+    setSelectedRouteId(routeId);
 
     const match = routeId.match(/^route_(.+)_to_(.+)$/);
     if (!match) return;
@@ -311,7 +336,7 @@ export function resetRouteHighlight(markerMap, map) {
         selectedRouteLine = null;
     }
 
-    selectedRouteId = null;
+    setSelectedRouteId(null);
 }
 
 // 中間点を追加
@@ -578,7 +603,7 @@ export function makeWaypointsClickableForMove(routeId, loadedData, markerMap, ma
                                 el.style.cursor = 'pointer';
                             }
                         });
-                        draggableMarkers = [];
+                        setDraggableMarkers([]);
                     }
 
                     element.style.cursor = 'move';
@@ -600,7 +625,8 @@ export function makeWaypointsClickableForMove(routeId, loadedData, markerMap, ma
                         redrawRouteLine(routeId, loadedData, map);
                     });
 
-                    draggableMarkers.push(marker);
+                    const updatedMarkers = [...draggableMarkers, marker];
+                    setDraggableMarkers(updatedMarkers);
                 });
             }
         }
@@ -633,14 +659,14 @@ export function makeWaypointsClickable(routeId, loadedData, markerMap, map) {
 export function exitAddMode(map) {
     if (!isAddMode) return;
 
-    isAddMode = false;
+    setIsAddMode(false);
 
     const addBtn = document.getElementById('addRouteBtn');
     addBtn.classList.remove('active');
 
     if (mapClickHandler) {
         map.off('click', mapClickHandler);
-        mapClickHandler = null;
+        setMapClickHandler(null);
     }
 
     map.getContainer().style.cursor = '';
@@ -650,7 +676,7 @@ export function exitAddMode(map) {
 export function exitMoveMode(markerMap, map) {
     if (!isMoveMode) return;
 
-    isMoveMode = false;
+    setIsMoveMode(false);
 
     const moveBtn = document.getElementById('moveRouteBtn');
     moveBtn.classList.remove('active');
@@ -671,7 +697,7 @@ export function exitMoveMode(markerMap, map) {
         }
     }
 
-    draggableMarkers = [];
+    setDraggableMarkers([]);
     map.getContainer().style.cursor = '';
 }
 
@@ -679,7 +705,7 @@ export function exitMoveMode(markerMap, map) {
 export function exitDeleteMode(markerMap) {
     if (!isDeleteMode) return;
 
-    isDeleteMode = false;
+    setIsDeleteMode(false);
 
     const deleteBtn = document.getElementById('deleteRouteBtn');
     deleteBtn.classList.remove('active');

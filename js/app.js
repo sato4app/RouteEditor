@@ -107,7 +107,7 @@ document.getElementById('routePath').addEventListener('change', function() {
                 marker.dragging.disable();
             }
         });
-        RouteEditor.draggableMarkers = [];
+        RouteEditor.setDraggableMarkers([]);
 
         // 新しいルートの中間点をクリック可能にする
         RouteEditor.makeWaypointsClickableForMove(selectedRouteId, getLoadedData(), markerMap, map);
@@ -139,7 +139,7 @@ document.getElementById('addRouteBtn').addEventListener('click', function() {
     }
 
     // 追加モードを開始
-    RouteEditor.isAddMode = true;
+    RouteEditor.setIsAddMode(true);
     this.classList.add('active');
 
     // カーソルを十字に変更
@@ -148,7 +148,7 @@ document.getElementById('addRouteBtn').addEventListener('click', function() {
     showMessage('地図上をクリックして中間点を追加してください。\n追加ボタンをもう一度クリックで解除', 'success');
 
     // 地図クリックイベントを設定
-    RouteEditor.mapClickHandler = function(e) {
+    const handler = function(e) {
         if (!RouteEditor.isAddMode) return;
 
         // クリック位置に中間点を追加
@@ -160,7 +160,8 @@ document.getElementById('addRouteBtn').addEventListener('click', function() {
         showMessage('中間点を追加しました', 'success');
     };
 
-    map.on('click', RouteEditor.mapClickHandler);
+    RouteEditor.setMapClickHandler(handler);
+    map.on('click', handler);
 });
 
 // 移動ボタン
@@ -188,7 +189,7 @@ document.getElementById('moveRouteBtn').addEventListener('click', function() {
     }
 
     // 移動モードを開始
-    RouteEditor.isMoveMode = true;
+    RouteEditor.setIsMoveMode(true);
     this.classList.add('active');
 
     // 中間点をクリック可能にする（移動モード用）
@@ -222,7 +223,7 @@ document.getElementById('deleteRouteBtn').addEventListener('click', function() {
     }
 
     // 削除モードを開始
-    RouteEditor.isDeleteMode = true;
+    RouteEditor.setIsDeleteMode(true);
     this.classList.add('active');
 
     // 中間点をクリック可能にする
@@ -337,7 +338,7 @@ document.getElementById('clearRouteBtn').addEventListener('click', async functio
     }
 
     // selectedRouteIdをリセット
-    RouteEditor.selectedRouteId = null;
+    RouteEditor.setSelectedRouteId(null);
 
     // allRoutesから削除したルートを除外
     const routeIndex = RouteEditor.allRoutes.findIndex(r => r.routeId === path);
@@ -420,7 +421,7 @@ document.getElementById('addMoveSpotBtn').addEventListener('click', function() {
     }
 
     // 追加・移動モードを開始
-    SpotEditor.isAddMoveSpotMode = true;
+    SpotEditor.setIsAddMoveSpotMode(true);
     this.classList.add('active');
 
     // スポットが選択されている場合は移動モードとして動作
@@ -437,7 +438,7 @@ document.getElementById('addMoveSpotBtn').addEventListener('click', function() {
     map.getContainer().style.cursor = 'crosshair';
 
     // 地図クリックイベントを設定（スポット追加用）
-    SpotEditor.spotMapClickHandler = function(e) {
+    const spotHandler = function(e) {
         if (!SpotEditor.isAddMoveSpotMode) return;
 
         // クリック位置に新しいスポットを追加
@@ -446,7 +447,8 @@ document.getElementById('addMoveSpotBtn').addEventListener('click', function() {
         showMessage('スポットを追加しました', 'success');
     };
 
-    map.on('click', SpotEditor.spotMapClickHandler);
+    SpotEditor.setSpotMapClickHandler(spotHandler);
+    map.on('click', spotHandler);
 });
 
 // 削除ボタン
@@ -497,8 +499,8 @@ document.getElementById('deleteSpotBtn').addEventListener('click', function() {
     }
 
     // 選択状態をリセット
-    SpotEditor.selectedSpotFeature = null;
-    SpotEditor.selectedSpotMarker = null;
+    SpotEditor.setSelectedSpotFeature(null);
+    SpotEditor.setSelectedSpotMarker(null);
 
     // ドロップダウンと統計を更新
     SpotEditor.updateSpotDropdown();
