@@ -621,6 +621,15 @@ export function makeWaypointsClickableForMove(routeId, loadedData, markerMap, ma
                     marker.on('dragend', function(e) {
                         const newLatLng = marker.getLatLng();
                         updateWaypointCoordinates(routeId, index, newLatLng, loadedData);
+
+                        // ドラッグを無効化
+                        if (marker.dragging) {
+                            marker.dragging.disable();
+                        }
+
+                        // ドラッグ可能マーカーをクリア（古いマーカーへの参照を削除）
+                        setDraggableMarkers([]);
+
                         optimizeRoute(routeId, false, loadedData, markerMap);
                         redrawRouteLine(routeId, loadedData, map);
 
