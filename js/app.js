@@ -984,14 +984,15 @@ function makeWaypointsClickableForMove(routeId) {
             if (element) {
                 element.style.cursor = 'pointer';
 
-                // クリックイベントを追加
+                // クリックイベントを追加（既存のイベントを削除してから追加）
+                marker.off('click');
                 marker.on('click', function(e) {
                     if (!isMoveMode) return;
 
                     // イベントの伝播を停止（地図のクリックイベントを防ぐ）
                     L.DomEvent.stopPropagation(e);
 
-                    // 以前のドラッグ可能マーカーを無効化
+                    // 以前のドラッグ可能マーカーを無効化（他の中間点はクリック可能なまま）
                     if (draggableMarkers.length > 0) {
                         draggableMarkers.forEach(m => {
                             if (m && m.dragging) {
