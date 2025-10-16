@@ -533,6 +533,11 @@ export function deleteWaypoint(routeId, marker, loadedData, markerMap, map) {
         optimizeRoute(routeId, false, loadedData, markerMap);
         redrawRouteLine(routeId, loadedData, map);
         updateRoutePathDropdown(loadedData);
+
+        // 削除モードが有効な場合、再描画されたマーカーに削除イベントを再設定
+        if (isDeleteMode) {
+            makeWaypointsClickable(routeId, loadedData, markerMap, map);
+        }
     }
 }
 
