@@ -50,6 +50,7 @@ export function initializeMap() {
 
     map.removeControl(map.zoomControl);
     new CustomZoomControl({ position: 'bottomright' }).addTo(map);
+    new CustomZoomControl({ position: 'topleft' }).addTo(map);
 
     const geoJsonLayer = L.layerGroup().addTo(map);
     const markerMap = new Map();
