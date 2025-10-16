@@ -40,6 +40,11 @@ export function setupFileInput(map, geoJsonLayer, markerMap, spotMarkerMap) {
                     spotMarkerMap.clear();
 
                     L.geoJSON(geoJsonData, {
+                        filter: function(feature) {
+                            // route_waypointは後で個別に描画するため、ここではフィルタリング
+                            const featureType = feature.properties && feature.properties.type;
+                            return featureType !== 'route_waypoint';
+                        },
                         style: function(feature) {
                             const type = feature && feature.geometry && feature.geometry.type;
                             if (type === 'LineString' || type === 'MultiLineString' || type === 'Polygon' || type === 'MultiPolygon') {
@@ -49,6 +54,7 @@ export function setupFileInput(map, geoJsonLayer, markerMap, spotMarkerMap) {
                         },
                         pointToLayer: function(feature, latlng) {
                             const featureType = feature.properties && feature.properties.type;
+
                             const style = DEFAULTS.FEATURE_STYLES[featureType] || DEFAULTS.POINT_STYLE;
 
                             let marker;
@@ -76,12 +82,6 @@ export function setupFileInput(map, geoJsonLayer, markerMap, spotMarkerMap) {
 
                             if (featureType === 'ポイントGPS' && feature.properties && feature.properties.id) {
                                 markerMap.set(feature.properties.id, marker);
-                            } else if (featureType === 'route_waypoint' && feature.properties && feature.properties.route_id) {
-                                const routeId = feature.properties.route_id;
-                                if (!markerMap.has(routeId)) {
-                                    markerMap.set(routeId, []);
-                                }
-                                markerMap.get(routeId).push(marker);
                             }
 
                             return marker;
@@ -89,10 +89,6 @@ export function setupFileInput(map, geoJsonLayer, markerMap, spotMarkerMap) {
                         onEachFeature: function(feature, layer) {
                             const featureType = feature.properties && feature.properties.type;
                             const geometryType = feature.geometry && feature.geometry.type;
-
-                            if (featureType === 'route_waypoint') {
-                                return;
-                            }
 
                             if (featureType === 'ポイントGPS' && feature.properties && feature.properties.id) {
                                 layer.bindPopup(feature.properties.id);
@@ -126,6 +122,12 @@ export function setupFileInput(map, geoJsonLayer, markerMap, spotMarkerMap) {
                     updateDropdowns(geoJsonData);
                     extractSpots(geoJsonData);
                     updateSpotDropdown();
+
+                    // 全ルートの中間点マーカーを作成
+                    const { allRoutes, redrawWaypointMarkers } = await import('./routeEditor.js');
+                    allRoutes.forEach(route => {
+                        redrawWaypointMarkers(route.routeId, geoJsonData, markerMap, geoJsonLayer);
+                    });
 
                     const group = new L.featureGroup();
                     geoJsonLayer.eachLayer(layer => group.addLayer(layer));

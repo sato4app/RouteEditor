@@ -421,38 +421,6 @@ export function redrawWaypointMarkers(routeId, loadedData, markerMap, geoJsonLay
         markerMap.delete(routeId);
     }
 
-    // geoJsonLayerに残っている可能性のある古いマーカーを完全に削除
-    // 対象ルートの座標を取得
-    const targetCoordinates = new Set();
-    loadedData.features
-        .filter(f => f.properties && f.properties.route_id === routeId && f.properties.type === 'route_waypoint')
-        .forEach(f => {
-            if (f.geometry && f.geometry.coordinates) {
-                const [lng, lat] = f.geometry.coordinates;
-                targetCoordinates.add(`${lat.toFixed(6)},${lng.toFixed(6)}`);
-            }
-        });
-
-    // geoJsonLayer内のすべてのレイヤーをチェックして、対象座標のマーカーを削除
-    const layersToRemove = [];
-    geoJsonLayer.eachLayer(layer => {
-        if (layer instanceof L.Marker && layer.getLatLng) {
-            const latLng = layer.getLatLng();
-            const key = `${latLng.lat.toFixed(6)},${latLng.lng.toFixed(6)}`;
-            if (targetCoordinates.has(key)) {
-                layersToRemove.push(layer);
-            }
-        }
-    });
-
-    layersToRemove.forEach(layer => {
-        if (layer.dragging) {
-            layer.dragging.disable();
-        }
-        layer.off();
-        geoJsonLayer.removeLayer(layer);
-    });
-
     const waypoints = loadedData.features
         .filter(f => f.properties && f.properties.route_id === routeId && f.properties.type === 'route_waypoint')
         .sort((a, b) => {
