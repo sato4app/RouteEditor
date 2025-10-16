@@ -4,45 +4,22 @@ import { DEFAULTS } from './constants.js';
 import { showMessage } from './message.js';
 
 // ルート編集の状態管理
-export let allPoints = [];
-export let allRoutes = [];
-export let selectedRouteId = null;
-export let selectedRouteLine = null;
-export let isAddMode = false;
-export let isMoveMode = false;
-export let isDeleteMode = false;
-export let mapClickHandler = null;
-export let draggableMarkers = [];
-
-// 状態変更用のセッター関数
-export function setIsAddMode(value) {
-    isAddMode = value;
-}
-
-export function setIsMoveMode(value) {
-    isMoveMode = value;
-}
-
-export function setIsDeleteMode(value) {
-    isDeleteMode = value;
-}
-
-export function setMapClickHandler(handler) {
-    mapClickHandler = handler;
-}
-
-export function setSelectedRouteId(value) {
-    selectedRouteId = value;
-}
-
-export function setDraggableMarkers(markers) {
-    draggableMarkers = markers;
-}
+export const state = {
+    allPoints: [],
+    allRoutes: [],
+    selectedRouteId: null,
+    selectedRouteLine: null,
+    isAddMode: false,
+    isMoveMode: false,
+    isDeleteMode: false,
+    mapClickHandler: null,
+    draggableMarkers: []
+};
 
 // ポイントとルートの抽出
 export function extractPointsAndRoutes(geoJsonData) {
-    allPoints = [];
-    allRoutes = [];
+    state.allPoints = [];
+    state.allRoutes = [];
 
     if (!geoJsonData || !geoJsonData.features) {
         return;
