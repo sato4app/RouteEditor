@@ -405,6 +405,7 @@ export function redrawRouteLine(routeId, loadedData, map) {
 
 // 中間点マーカーを再描画
 export function redrawWaypointMarkers(routeId, loadedData, markerMap, geoJsonLayer) {
+    // markerMapに登録されているマーカーを削除
     const waypointMarkers = markerMap.get(routeId);
     if (Array.isArray(waypointMarkers)) {
         waypointMarkers.forEach(marker => {
@@ -419,6 +420,38 @@ export function redrawWaypointMarkers(routeId, loadedData, markerMap, geoJsonLay
         });
         markerMap.delete(routeId);
     }
+
+    // geoJsonLayerに残っている可能性のある古いマーカーを完全に削除
+    // 対象ルートの座標を取得
+    const targetCoordinates = new Set();
+    loadedData.features
+        .filter(f => f.properties && f.properties.route_id === routeId && f.properties.type === 'route_waypoint')
+        .forEach(f => {
+            if (f.geometry && f.geometry.coordinates) {
+                const [lng, lat] = f.geometry.coordinates;
+                targetCoordinates.add(`${lat.toFixed(6)},${lng.toFixed(6)}`);
+            }
+        });
+
+    // geoJsonLayer内のすべてのレイヤーをチェックして、対象座標のマーカーを削除
+    const layersToRemove = [];
+    geoJsonLayer.eachLayer(layer => {
+        if (layer instanceof L.Marker && layer.getLatLng) {
+            const latLng = layer.getLatLng();
+            const key = `${latLng.lat.toFixed(6)},${latLng.lng.toFixed(6)}`;
+            if (targetCoordinates.has(key)) {
+                layersToRemove.push(layer);
+            }
+        }
+    });
+
+    layersToRemove.forEach(layer => {
+        if (layer.dragging) {
+            layer.dragging.disable();
+        }
+        layer.off();
+        geoJsonLayer.removeLayer(layer);
+    });
 
     const waypoints = loadedData.features
         .filter(f => f.properties && f.properties.route_id === routeId && f.properties.type === 'route_waypoint')
@@ -650,11 +683,6 @@ export function makeWaypointsClickableForMove(routeId, loadedData, markerMap, ma
 
                         // ドラッグ可能マーカーをクリア（古いマーカーへの参照を削除）
                         setDraggableMarkers([]);
-
-                        // 明示的に現在のマーカーをレイヤーから削除
-                        if (window.geoJsonLayer) {
-                            window.geoJsonLayer.removeLayer(marker);
-                        }
 
                         // ルートを最適化（この中でマーカーが再作成される）
                         optimizeRoute(routeId, false, loadedData, markerMap);
