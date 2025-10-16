@@ -651,6 +651,11 @@ export function makeWaypointsClickableForMove(routeId, loadedData, markerMap, ma
                         // ドラッグ可能マーカーをクリア（古いマーカーへの参照を削除）
                         setDraggableMarkers([]);
 
+                        // 明示的に現在のマーカーをレイヤーから削除
+                        if (window.geoJsonLayer) {
+                            window.geoJsonLayer.removeLayer(marker);
+                        }
+
                         // ルートを最適化（この中でマーカーが再作成される）
                         optimizeRoute(routeId, false, loadedData, markerMap);
                         redrawRouteLine(routeId, loadedData, map);
