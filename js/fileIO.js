@@ -31,7 +31,7 @@ export function setupFileInput(map, geoJsonLayer, markerMap, spotMarkerMap) {
             }
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     const geoJsonData = JSON.parse(e.target.result);
 
