@@ -124,8 +124,8 @@ export function setupFileInput(map, geoJsonLayer, markerMap, spotMarkerMap) {
                     updateSpotDropdown();
 
                     // 全ルートの中間点マーカーを作成
-                    const { allRoutes, redrawWaypointMarkers } = await import('./routeEditor.js');
-                    allRoutes.forEach(route => {
+                    const { state, redrawWaypointMarkers } = await import('./routeEditor.js');
+                    state.allRoutes.forEach(route => {
                         redrawWaypointMarkers(route.routeId, geoJsonData, markerMap, geoJsonLayer);
                     });
 

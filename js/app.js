@@ -82,7 +82,7 @@ document.getElementById('routePath').addEventListener('change', function() {
     RouteEditor.highlightRoute(selectedRouteId, getLoadedData(), markerMap, map);
 
     // 移動モードが有効な場合、新しく選択されたルートの中間点をクリック可能にする
-    if (RouteEditor.isMoveMode && selectedRouteId) {
+    if (RouteEditor.state.isMoveMode && selectedRouteId) {
         // 以前のルートの中間点のイベントとスタイルをリセット
         const previousRouteId = document.getElementById('routePath').options[document.getElementById('routePath').selectedIndex - 1]?.value;
         if (previousRouteId) {
@@ -102,12 +102,12 @@ document.getElementById('routePath').addEventListener('change', function() {
         }
 
         // ドラッグ可能マーカーをリセット
-        RouteEditor.draggableMarkers.forEach(marker => {
+        RouteEditor.state.draggableMarkers.forEach(marker => {
             if (marker && marker.dragging) {
                 marker.dragging.disable();
             }
         });
-        RouteEditor.setDraggableMarkers([]);
+        RouteEditor.state.draggableMarkers = [];
 
         // 新しいルートの中間点をクリック可能にする
         RouteEditor.makeWaypointsClickableForMove(selectedRouteId, getLoadedData(), markerMap, map);
@@ -124,22 +124,22 @@ document.getElementById('addRouteBtn').addEventListener('click', function() {
     }
 
     // 既に追加モードの場合は解除
-    if (RouteEditor.isAddMode) {
+    if (RouteEditor.state.isAddMode) {
         RouteEditor.exitAddMode(map);
         showMessage('追加モードを解除しました', 'success');
         return;
     }
 
     // 他のモードが有効な場合は解除
-    if (RouteEditor.isMoveMode) {
+    if (RouteEditor.state.isMoveMode) {
         RouteEditor.exitMoveMode(markerMap, map);
     }
-    if (RouteEditor.isDeleteMode) {
+    if (RouteEditor.state.isDeleteMode) {
         RouteEditor.exitDeleteMode(markerMap);
     }
 
     // 追加モードを開始
-    RouteEditor.setIsAddMode(true);
+    RouteEditor.state.isAddMode = true;
     this.classList.add('active');
 
     // カーソルを十字に変更
@@ -149,7 +149,7 @@ document.getElementById('addRouteBtn').addEventListener('click', function() {
 
     // 地図クリックイベントを設定
     const handler = function(e) {
-        if (!RouteEditor.isAddMode) return;
+        if (!RouteEditor.state.isAddMode) return;
 
         // クリック位置に中間点を追加
         RouteEditor.addWaypointToRoute(path, e.latlng, getLoadedData(), markerMap, geoJsonLayer);
@@ -160,7 +160,7 @@ document.getElementById('addRouteBtn').addEventListener('click', function() {
         showMessage('中間点を追加しました', 'success');
     };
 
-    RouteEditor.setMapClickHandler(handler);
+    RouteEditor.state.mapClickHandler = handler;
     map.on('click', handler);
 });
 
@@ -174,22 +174,22 @@ document.getElementById('moveRouteBtn').addEventListener('click', function() {
     }
 
     // 既に移動モードの場合は解除
-    if (RouteEditor.isMoveMode) {
+    if (RouteEditor.state.isMoveMode) {
         RouteEditor.exitMoveMode(markerMap, map);
         showMessage('移動モードを解除しました', 'success');
         return;
     }
 
     // 他のモードが有効な場合は解除
-    if (RouteEditor.isAddMode) {
+    if (RouteEditor.state.isAddMode) {
         RouteEditor.exitAddMode(map);
     }
-    if (RouteEditor.isDeleteMode) {
+    if (RouteEditor.state.isDeleteMode) {
         RouteEditor.exitDeleteMode(markerMap);
     }
 
     // 移動モードを開始
-    RouteEditor.setIsMoveMode(true);
+    RouteEditor.state.isMoveMode = true;
     this.classList.add('active');
 
     // 中間点をクリック可能にする（移動モード用）
@@ -208,22 +208,22 @@ document.getElementById('deleteRouteBtn').addEventListener('click', function() {
     }
 
     // 既に削除モードの場合は解除
-    if (RouteEditor.isDeleteMode) {
+    if (RouteEditor.state.isDeleteMode) {
         RouteEditor.exitDeleteMode(markerMap);
         showMessage('削除モードを解除しました', 'success');
         return;
     }
 
     // 他のモードが有効な場合は解除
-    if (RouteEditor.isAddMode) {
+    if (RouteEditor.state.isAddMode) {
         RouteEditor.exitAddMode(map);
     }
-    if (RouteEditor.isMoveMode) {
+    if (RouteEditor.state.isMoveMode) {
         RouteEditor.exitMoveMode(markerMap, map);
     }
 
     // 削除モードを開始
-    RouteEditor.setIsDeleteMode(true);
+    RouteEditor.state.isDeleteMode = true;
     this.classList.add('active');
 
     // 中間点をクリック可能にする
@@ -242,13 +242,13 @@ document.getElementById('optimizeRouteBtn').addEventListener('click', function()
     }
 
     // 他のモードが有効な場合は解除
-    if (RouteEditor.isAddMode) {
+    if (RouteEditor.state.isAddMode) {
         RouteEditor.exitAddMode(map);
     }
-    if (RouteEditor.isMoveMode) {
+    if (RouteEditor.state.isMoveMode) {
         RouteEditor.exitMoveMode(markerMap, map);
     }
-    if (RouteEditor.isDeleteMode) {
+    if (RouteEditor.state.isDeleteMode) {
         RouteEditor.exitDeleteMode(markerMap);
     }
 
@@ -269,13 +269,13 @@ document.getElementById('clearRouteBtn').addEventListener('click', async functio
     }
 
     // 他のモードが有効な場合は解除
-    if (RouteEditor.isAddMode) {
+    if (RouteEditor.state.isAddMode) {
         RouteEditor.exitAddMode(map);
     }
-    if (RouteEditor.isMoveMode) {
+    if (RouteEditor.state.isMoveMode) {
         RouteEditor.exitMoveMode(markerMap, map);
     }
-    if (RouteEditor.isDeleteMode) {
+    if (RouteEditor.state.isDeleteMode) {
         RouteEditor.exitDeleteMode(markerMap);
     }
 
@@ -313,9 +313,9 @@ document.getElementById('clearRouteBtn').addEventListener('click', async functio
     }
 
     // ルート線を削除
-    if (RouteEditor.selectedRouteLine) {
-        map.removeLayer(RouteEditor.selectedRouteLine);
-        RouteEditor.selectedRouteLine = null;
+    if (RouteEditor.state.selectedRouteLine) {
+        map.removeLayer(RouteEditor.state.selectedRouteLine);
+        RouteEditor.state.selectedRouteLine = null;
     }
 
     // 開始・終了ポイントのマーカー色を元に戻す
@@ -341,9 +341,9 @@ document.getElementById('clearRouteBtn').addEventListener('click', async functio
     RouteEditor.setSelectedRouteId(null);
 
     // allRoutesから削除したルートを除外
-    const routeIndex = RouteEditor.allRoutes.findIndex(r => r.routeId === path);
+    const routeIndex = RouteEditor.state.allRoutes.findIndex(r => r.routeId === path);
     if (routeIndex !== -1) {
-        RouteEditor.allRoutes.splice(routeIndex, 1);
+        RouteEditor.state.allRoutes.splice(routeIndex, 1);
     }
 
     // route-dropdown-shortとroute-dropdown-longを更新

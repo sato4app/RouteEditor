@@ -35,7 +35,7 @@ export function extractPointsAndRoutes(geoJsonData) {
         if (geometryType === 'Point' && featureType === 'ポイントGPS') {
             const pointId = feature.properties && feature.properties.id;
             if (pointId) {
-                allPoints.push(pointId);
+                state.allPoints.push(pointId);
             }
         }
 
@@ -52,7 +52,7 @@ export function extractPointsAndRoutes(geoJsonData) {
     routeIdSet.forEach(routeId => {
         const match = routeId.match(/^route_(.+)_to_(.+)$/);
         if (match) {
-            allRoutes.push({
+            state.allRoutes.push({
                 routeId: routeId,
                 startId: match[1],
                 endId: match[2]
@@ -68,7 +68,7 @@ export function updateDropdowns(loadedData) {
 
     // allRoutesから実際にルートが存在するポイントIDの1文字目を収集
     const routePointIds = new Set();
-    allRoutes.forEach(route => {
+    state.allRoutes.forEach(route => {
         routePointIds.add(route.startId);
         routePointIds.add(route.endId);
     });
@@ -98,7 +98,7 @@ export function updateRouteLongDropdown(loadedData) {
     let filteredPointIds = [];
     if (startCharFilter) {
         const routePointIds = new Set();
-        allRoutes.forEach(route => {
+        state.allRoutes.forEach(route => {
             if (route.startId.charAt(0) === startCharFilter) {
                 routePointIds.add(route.startId);
             }
@@ -109,7 +109,7 @@ export function updateRouteLongDropdown(loadedData) {
         filteredPointIds = [...routePointIds].sort();
     } else {
         const allRoutePointIds = new Set();
-        allRoutes.forEach(route => {
+        state.allRoutes.forEach(route => {
             allRoutePointIds.add(route.startId);
             allRoutePointIds.add(route.endId);
         });
@@ -145,7 +145,7 @@ export function updateRoutePathDropdown(loadedData) {
     const endIdFilter = routeEndSelect.value;
     const previousSelection = routePathSelect.value;
 
-    let filteredRoutes = allRoutes;
+    let filteredRoutes = state.allRoutes;
 
     if (startCharFilter) {
         filteredRoutes = filteredRoutes.filter(r =>
@@ -231,7 +231,7 @@ export function highlightRoute(routeId, loadedData, markerMap, map) {
 
     if (!routeId) return;
 
-    setSelectedRouteId(routeId);
+    state.selectedRouteId = routeId;
 
     const match = routeId.match(/^route_(.+)_to_(.+)$/);
     if (!match) return;
@@ -266,7 +266,7 @@ export function highlightRoute(routeId, loadedData, markerMap, map) {
 
     const coordinates = getCoordinatesFromGeoJSON(routeId, loadedData);
     if (coordinates) {
-        selectedRouteLine = L.polyline(coordinates, {
+        state.selectedRouteLine = L.polyline(coordinates, {
             color: '#ef454a',
             weight: 2
         }).addTo(map);
@@ -275,9 +275,9 @@ export function highlightRoute(routeId, loadedData, markerMap, map) {
 
 // ルートハイライトのリセット
 export function resetRouteHighlight(markerMap, map) {
-    if (!selectedRouteId) return;
+    if (!state.selectedRouteId) return;
 
-    const match = selectedRouteId.match(/^route_(.+)_to_(.+)$/);
+    const match = state.selectedRouteId.match(/^route_(.+)_to_(.+)$/);
     if (match) {
         const startId = match[1];
         const endId = match[2];
@@ -293,7 +293,7 @@ export function resetRouteHighlight(markerMap, map) {
         }
     }
 
-    const waypointMarkers = markerMap.get(selectedRouteId);
+    const waypointMarkers = markerMap.get(state.selectedRouteId);
     if (Array.isArray(waypointMarkers)) {
         waypointMarkers.forEach(marker => {
             if (marker && marker.getElement) {
@@ -308,12 +308,12 @@ export function resetRouteHighlight(markerMap, map) {
         });
     }
 
-    if (selectedRouteLine) {
-        map.removeLayer(selectedRouteLine);
-        selectedRouteLine = null;
+    if (state.selectedRouteLine) {
+        map.removeLayer(state.selectedRouteLine);
+        state.selectedRouteLine = null;
     }
 
-    setSelectedRouteId(null);
+    state.selectedRouteId = null;
 }
 
 // 中間点を追加
@@ -366,14 +366,14 @@ export function addWaypointToRoute(routeId, latlng, loadedData, markerMap, geoJs
 
 // ルート線を再描画
 export function redrawRouteLine(routeId, loadedData, map) {
-    if (selectedRouteLine) {
-        map.removeLayer(selectedRouteLine);
-        selectedRouteLine = null;
+    if (state.selectedRouteLine) {
+        map.removeLayer(state.selectedRouteLine);
+        state.selectedRouteLine = null;
     }
 
     const coordinates = getCoordinatesFromGeoJSON(routeId, loadedData);
     if (coordinates) {
-        selectedRouteLine = L.polyline(coordinates, {
+        state.selectedRouteLine = L.polyline(coordinates, {
             color: '#ef454a',
             weight: 2
         }).addTo(map);
@@ -406,7 +406,7 @@ export function redrawWaypointMarkers(routeId, loadedData, markerMap, geoJsonLay
             return numA - numB;
         });
 
-    const isSelected = selectedRouteId === routeId;
+    const isSelected = state.selectedRouteId === routeId;
     const markerColor = isSelected ? '#ef454a' : '#f58220';
     const newMarkers = [];
     const style = DEFAULTS.FEATURE_STYLES['route_waypoint'];
@@ -480,7 +480,7 @@ export function deleteWaypoint(routeId, marker, loadedData, markerMap, map) {
         updateRoutePathDropdown(loadedData);
 
         // 削除モードが有効な場合、再描画されたマーカーに削除イベントを再設定
-        if (isDeleteMode) {
+        if (state.isDeleteMode) {
             makeWaypointsClickable(routeId, loadedData, markerMap, map);
         }
     }
@@ -584,12 +584,12 @@ export function makeWaypointsClickableForMove(routeId, loadedData, markerMap, ma
                 marker.off('dragend');
 
                 marker.on('click', function(e) {
-                    if (!isMoveMode) return;
+                    if (!state.isMoveMode) return;
 
                     L.DomEvent.stopPropagation(e);
 
-                    if (draggableMarkers.length > 0) {
-                        draggableMarkers.forEach(m => {
+                    if (state.draggableMarkers.length > 0) {
+                        state.draggableMarkers.forEach(m => {
                             if (m && m.dragging) {
                                 m.dragging.disable();
                             }
@@ -598,7 +598,7 @@ export function makeWaypointsClickableForMove(routeId, loadedData, markerMap, ma
                                 el.style.cursor = 'pointer';
                             }
                         });
-                        setDraggableMarkers([]);
+                        state.draggableMarkers = [];
                     }
 
                     element.style.cursor = 'move';
@@ -632,20 +632,19 @@ export function makeWaypointsClickableForMove(routeId, loadedData, markerMap, ma
                         }
 
                         // ドラッグ可能マーカーをクリア（古いマーカーへの参照を削除）
-                        setDraggableMarkers([]);
+                        state.draggableMarkers = [];
 
                         // ルートを最適化（この中でマーカーが再作成される）
                         optimizeRoute(routeId, false, loadedData, markerMap);
                         redrawRouteLine(routeId, loadedData, map);
 
                         // マーカーが再描画された後、再度クリック可能にする
-                        if (isMoveMode) {
+                        if (state.isMoveMode) {
                             makeWaypointsClickableForMove(routeId, loadedData, markerMap, map);
                         }
                     });
 
-                    const updatedMarkers = [...draggableMarkers, marker];
-                    setDraggableMarkers(updatedMarkers);
+                    state.draggableMarkers = [...state.draggableMarkers, marker];
                 });
             }
         }
@@ -664,7 +663,7 @@ export function makeWaypointsClickable(routeId, loadedData, markerMap, map) {
                 element.style.cursor = 'pointer';
 
                 marker.on('click', function(e) {
-                    if (!isDeleteMode) return;
+                    if (!state.isDeleteMode) return;
 
                     L.DomEvent.stopPropagation(e);
                     deleteWaypoint(routeId, marker, loadedData, markerMap, map);
@@ -676,16 +675,16 @@ export function makeWaypointsClickable(routeId, loadedData, markerMap, map) {
 
 // 追加モードを解除
 export function exitAddMode(map) {
-    if (!isAddMode) return;
+    if (!state.isAddMode) return;
 
-    setIsAddMode(false);
+    state.isAddMode = false;
 
     const addBtn = document.getElementById('addRouteBtn');
     addBtn.classList.remove('active');
 
-    if (mapClickHandler) {
-        map.off('click', mapClickHandler);
-        setMapClickHandler(null);
+    if (state.mapClickHandler) {
+        map.off('click', state.mapClickHandler);
+        state.mapClickHandler = null;
     }
 
     map.getContainer().style.cursor = '';
@@ -693,15 +692,15 @@ export function exitAddMode(map) {
 
 // 移動モードを解除
 export function exitMoveMode(markerMap, map) {
-    if (!isMoveMode) return;
+    if (!state.isMoveMode) return;
 
-    setIsMoveMode(false);
+    state.isMoveMode = false;
 
     const moveBtn = document.getElementById('moveRouteBtn');
     moveBtn.classList.remove('active');
 
-    if (selectedRouteId) {
-        const waypointMarkers = markerMap.get(selectedRouteId);
+    if (state.selectedRouteId) {
+        const waypointMarkers = markerMap.get(state.selectedRouteId);
         if (Array.isArray(waypointMarkers)) {
             waypointMarkers.forEach(marker => {
                 if (marker && marker.dragging) {
@@ -716,21 +715,21 @@ export function exitMoveMode(markerMap, map) {
         }
     }
 
-    setDraggableMarkers([]);
+    state.draggableMarkers = [];
     map.getContainer().style.cursor = '';
 }
 
 // 削除モードを解除
 export function exitDeleteMode(markerMap) {
-    if (!isDeleteMode) return;
+    if (!state.isDeleteMode) return;
 
-    setIsDeleteMode(false);
+    state.isDeleteMode = false;
 
     const deleteBtn = document.getElementById('deleteRouteBtn');
     deleteBtn.classList.remove('active');
 
-    if (selectedRouteId) {
-        const waypointMarkers = markerMap.get(selectedRouteId);
+    if (state.selectedRouteId) {
+        const waypointMarkers = markerMap.get(state.selectedRouteId);
         if (Array.isArray(waypointMarkers)) {
             waypointMarkers.forEach(marker => {
                 const element = marker.getElement && marker.getElement();
@@ -742,3 +741,37 @@ export function exitDeleteMode(markerMap) {
         }
     }
 }
+
+// 状態管理用のセッター関数
+export function setSelectedRouteId(id) {
+    state.selectedRouteId = id;
+}
+
+export function setIsAddMode(value) {
+    state.isAddMode = value;
+}
+
+export function setIsMoveMode(value) {
+    state.isMoveMode = value;
+}
+
+export function setIsDeleteMode(value) {
+    state.isDeleteMode = value;
+}
+
+export function setMapClickHandler(handler) {
+    state.mapClickHandler = handler;
+}
+
+export function setDraggableMarkers(markers) {
+    state.draggableMarkers = markers;
+}
+
+// 下位互換性のために状態変数を直接エクスポート
+export const { allPoints, allRoutes } = state;
+export const isAddMode = state.isAddMode;
+export const isMoveMode = state.isMoveMode;
+export const isDeleteMode = state.isDeleteMode;
+export const selectedRouteId = state.selectedRouteId;
+export const selectedRouteLine = state.selectedRouteLine;
+export const draggableMarkers = state.draggableMarkers;
