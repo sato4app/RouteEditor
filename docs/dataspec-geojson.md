@@ -56,7 +56,7 @@
     "id": "文字列（導出値）",
     "name": "文字列（必須）",
     "type": "route_waypoint（必須）",
-    "source": "image_transformed（読み込み時）"／"route_editor（出力時）",
+    "source": "image_transformed" or "route_editor",
     "route_id": "文字列（導出値）",
     "description": "文字列（必須）"
   },
@@ -73,7 +73,7 @@
 | id | string | ○ | 中間点ID | "route_C-03_to_J-01_waypoint_06" |
 | name | string | ○ | 中間点名 | "waypoint_06" |
 | type | string | ○ | 固定値 | "route_waypoint" |
-| source | string | - | 文字列 | "image_transformed"/"route_editor" |
+| source | string | ○ | 文字列 | "image_transformed" or "route_editor" |
 | route_id | string | ○ | ルートID | "route_C-03_to_J-01" |
 | description | string | ○ | 固定値 | "ルート中間点" |
 | coordinates | array | ○ | [経度, 緯度, 標高] | [135.49353, 34.86449, 564.7] |
@@ -83,7 +83,7 @@
 - route_idは、"route_"+開始ポイント+"_to_"+終了ポイント
 - idは、route_id+"_"+name(=中間点名)
 - nameは、"waypoint_"+中間点連番(2桁)
-- sourceは、GeoJSON出力の際は"routeEditor"。読み込み時は問わない。
+- sourceは、GeoJSON出力では、"image_transformed" or "routeEditor"。
 
 ### 3. スポット
 休憩所や施設などの地点情報を格納する。
@@ -96,7 +96,7 @@
     "id": "文字列（導出値）",
     "name": "文字列（必須）",
     "type": "spot（必須）",
-    "source": "image_transformed（読み込み時）"／"route_editor（出力時）",
+    "source": "image_transformed" or "route_editor",
     "description": "文字列（必須）"
   },
   "geometry": {
@@ -112,14 +112,14 @@
 | id | string | ○ | 自動生成ID | "spot08_薬師堂" |
 | name | string | ○ | スポット名 | "薬師堂" |
 | type | string | ○ | 固定値 | "spot" |
-| source | string | - | 文字列 | "image_transformed"/"route_editor" |
+| source | string | ○ | 文字列 | "image_transformed"/"route_editor" |
 | description | string | ○ | 固定値 | "スポット" |
 | coordinates | array | ○ | [経度, 緯度, 標高] | [135.49052, 34.86557, 564.7] |
 
 ###### 注意
 - 標高はオプション
 - idは、"spot"+中間点連番(2桁)+"_"+name(=スポット名)
-- sourceは、GeoJSON出力の際は"routeEditor"。読み込み時は問わない。
+- sourceは、GeoJSON出力では、"image_transformed" or "routeEditor"。
 
 ## データソース分類
 
@@ -188,3 +188,4 @@
 
 ## 更新履歴
 - 初版: 2025年09月29日
+- 1.1: 2025年10月17日
