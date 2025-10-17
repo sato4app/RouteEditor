@@ -79,39 +79,23 @@ document.getElementById('routeEnd').addEventListener('change', function() {
 // route-path-dropdownの変更イベントリスナー（ルートハイライト）
 document.getElementById('routePath').addEventListener('change', function() {
     const selectedRouteId = this.value;
-    RouteEditor.highlightRoute(selectedRouteId, getLoadedData(), markerMap, map);
 
-    // 移動モードが有効な場合、新しく選択されたルートの中間点をクリック可能にする
-    if (RouteEditor.state.isMoveMode && selectedRouteId) {
-        // 以前のルートの中間点のイベントとスタイルをリセット
-        const previousRouteId = document.getElementById('routePath').options[document.getElementById('routePath').selectedIndex - 1]?.value;
-        if (previousRouteId) {
-            const previousMarkers = markerMap.get(previousRouteId);
-            if (Array.isArray(previousMarkers)) {
-                previousMarkers.forEach(marker => {
-                    if (marker && marker.dragging) {
-                        marker.dragging.disable();
-                    }
-                    const element = marker.getElement && marker.getElement();
-                    if (element) {
-                        element.style.cursor = '';
-                    }
-                    marker.off('click');
-                });
-            }
-        }
-
-        // ドラッグ可能マーカーをリセット
-        RouteEditor.state.draggableMarkers.forEach(marker => {
-            if (marker && marker.dragging) {
-                marker.dragging.disable();
-            }
-        });
-        RouteEditor.state.draggableMarkers = [];
-
-        // 新しいルートの中間点をクリック可能にする
-        RouteEditor.makeWaypointsClickableForMove(selectedRouteId, getLoadedData(), markerMap, map);
+    // モードが有効な場合は一旦すべて解除
+    if (RouteEditor.state.isAddMode) {
+        RouteEditor.exitAddMode(map);
+        showMessage('ルート選択変更により追加モードを解除しました', 'success');
     }
+    if (RouteEditor.state.isMoveMode) {
+        RouteEditor.exitMoveMode(markerMap, map);
+        showMessage('ルート選択変更により移動モードを解除しました', 'success');
+    }
+    if (RouteEditor.state.isDeleteMode) {
+        RouteEditor.exitDeleteMode(markerMap);
+        showMessage('ルート選択変更により削除モードを解除しました', 'success');
+    }
+
+    // ルートをハイライト
+    RouteEditor.highlightRoute(selectedRouteId, getLoadedData(), markerMap, map);
 });
 
 // 追加ボタン
