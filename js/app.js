@@ -216,33 +216,6 @@ document.getElementById('deleteRouteBtn').addEventListener('click', function() {
     showMessage('中間点をクリックして削除できます。削除ボタンをもう一度クリックで解除', 'success');
 });
 
-// 最適化ボタン
-document.getElementById('optimizeRouteBtn').addEventListener('click', function() {
-    const path = document.getElementById('routePath').value;
-
-    if (!path) {
-        showMessage('ルートを選択してください', 'warning');
-        return;
-    }
-
-    // 他のモードが有効な場合は解除
-    if (RouteEditor.state.isAddMode) {
-        RouteEditor.exitAddMode(map);
-    }
-    if (RouteEditor.state.isMoveMode) {
-        RouteEditor.exitMoveMode(markerMap, map);
-    }
-    if (RouteEditor.state.isDeleteMode) {
-        RouteEditor.exitDeleteMode(markerMap);
-    }
-
-    // ルートを最適化
-    RouteEditor.optimizeRoute(path, true, getLoadedData(), markerMap);
-
-    // ルート線を再描画
-    RouteEditor.redrawRouteLine(path, getLoadedData(), map);
-});
-
 // クリアボタン
 document.getElementById('clearRouteBtn').addEventListener('click', async function() {
     const path = document.getElementById('routePath').value;
