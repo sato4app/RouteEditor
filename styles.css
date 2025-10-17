@@ -240,7 +240,7 @@ button:hover {
     gap: 20px;
 }
 
-.route-path-dropdown {
+.route-dropdown-full {
     flex: 1;
     padding: 8px 10px;
     font-size: 12px;
@@ -255,7 +255,7 @@ button:hover {
     padding-right: 32px;
 }
 
-.route-path-dropdown:focus {
+.route-dropdown-full:focus {
     outline: none;
     border-color: #0066cc;
 }

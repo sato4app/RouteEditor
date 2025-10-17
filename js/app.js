@@ -76,7 +76,7 @@ document.getElementById('routeEnd').addEventListener('change', function() {
     RouteEditor.updateRoutePathDropdown(getLoadedData());
 });
 
-// route-path-dropdownの変更イベントリスナー（ルートハイライト）
+// route-dropdown-fullの変更イベントリスナー（ルートハイライト）
 document.getElementById('routePath').addEventListener('change', function() {
     const selectedRouteId = this.value;
 
@@ -306,7 +306,7 @@ document.getElementById('clearRouteBtn').addEventListener('click', async functio
     // route-dropdown-shortとroute-dropdown-longを更新
     RouteEditor.updateDropdowns(getLoadedData());
 
-    // route-path-dropdownを更新して選択無し状態にする
+    // route-dropdown-fullを更新して選択無し状態にする
     document.getElementById('routePath').value = '';
 
     showMessage('ルートを削除(=クリア)しました', 'success');
