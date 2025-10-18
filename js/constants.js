@@ -73,3 +73,15 @@ export const MODES = {
     ROUTE: 'route',
     SPOT: 'spot'
 };
+
+// スポット区分のリスト
+export const SPOT_CATEGORIES = [
+    '旧跡',
+    '神社・仏閣',
+    '石碑・記念碑',
+    '展望台',
+    '休憩所',
+    'トイレ',
+    'バス停',
+    '交差点'
+];

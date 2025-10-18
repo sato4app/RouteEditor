@@ -509,13 +509,39 @@ button:hover {
     background-color: white;
 }
 
+.spot-category {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.spot-category-dropdown {
+    flex: 1;
+    padding: 6px 8px;
+    font-size: 12px;
+    border: 2px solid #333;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=UTF-8,<svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L6 6L11 1" stroke="%23333" stroke-width="2" stroke-linecap="round"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 32px;
+}
+
+.spot-category-dropdown:focus {
+    outline: none;
+    border-color: #0066cc;
+}
+
 .spot-buttons {
     display: flex;
     gap: 12px;
 }
 
 .spot-btn {
-    flex: 1;
     padding: 6px 16px;
     font-size: 12px;
     border: 2px solid #333;
@@ -541,6 +567,14 @@ button:hover {
 
 .spot-btn.active:hover {
     background-color: #0056b3;
+}
+
+#addMoveSpotBtn {
+    flex: none;
+}
+
+#deleteSpotBtn {
+    flex: none;
 }
 
 /* Leafletポップアップのスタイル */

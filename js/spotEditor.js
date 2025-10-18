@@ -1,6 +1,6 @@
 // スポット編集機能
 
-import { DEFAULTS, MODES } from './constants.js';
+import { DEFAULTS, MODES, SPOT_CATEGORIES } from './constants.js';
 import { showMessage } from './message.js';
 import { updateStats } from './stats.js';
 
@@ -58,6 +58,19 @@ export function extractSpots(geoJsonData) {
     });
 }
 
+// スポット区分ドロップダウンの初期化
+export function initSpotCategoryDropdown() {
+    const spotCategorySelect = document.getElementById('spotCategory');
+
+    spotCategorySelect.innerHTML = '<option value="">選択してください</option>';
+    SPOT_CATEGORIES.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        spotCategorySelect.appendChild(option);
+    });
+}
+
 // スポットドロップダウンの更新
 export function updateSpotDropdown() {
     const spotSelect = document.getElementById('spotSelect');
@@ -92,6 +105,7 @@ export function highlightSpot(spotIndex, spotMarkerMap) {
         setSelectedSpotFeature(null);
         setSelectedSpotMarker(null);
         document.getElementById('selectedSpotName').value = '';
+        document.getElementById('spotCategory').value = '';
         return;
     }
 
@@ -115,6 +129,11 @@ export function highlightSpot(spotIndex, spotMarkerMap) {
     }
 
     document.getElementById('selectedSpotName').value = spot.name;
+
+    // スポット区分を表示
+    const category = spot.feature.properties && spot.feature.properties.category;
+    document.getElementById('spotCategory').value = category || '';
+
 
     const featureType = spot.feature.properties && spot.feature.properties.type;
     const geometryType = spot.feature.geometry && spot.feature.geometry.type;

@@ -40,6 +40,7 @@ document.querySelectorAll('input[name="mode"]').forEach(radio => {
 
             document.getElementById('spotSelect').value = '';
             document.getElementById('selectedSpotName').value = '';
+            document.getElementById('spotCategory').value = '';
         }
 
         // パネルの表示切り替え
@@ -286,6 +287,9 @@ document.getElementById('resetDropdownBtn').addEventListener('click', function()
 // スポット編集モードのイベントハンドラー
 // ========================================
 
+// スポット区分ドロップダウンの初期化
+SpotEditor.initSpotCategoryDropdown();
+
 // スポットドロップダウンの変更イベントリスナー
 document.getElementById('spotSelect').addEventListener('change', function() {
     const selectedIndex = this.value;
@@ -319,6 +323,20 @@ document.getElementById('selectedSpotName').addEventListener('blur', function() 
     spotSelect.value = currentIndex;
 
     showMessage('スポット名を更新しました', 'success');
+});
+
+// スポット区分ドロップダウンの変更イベントリスナー
+document.getElementById('spotCategory').addEventListener('change', function() {
+    const newCategory = this.value;
+
+    if (!SpotEditor.selectedSpotFeature) return;
+
+    // GeoJSONデータのスポット区分を更新
+    if (SpotEditor.selectedSpotFeature.properties) {
+        SpotEditor.selectedSpotFeature.properties.category = newCategory;
+    }
+
+    showMessage('スポット区分を更新しました', 'success');
 });
 
 // 追加・移動ボタン
@@ -425,6 +443,7 @@ document.getElementById('deleteSpotBtn').addEventListener('click', function() {
     // ドロップダウンの選択をクリア
     document.getElementById('spotSelect').value = '';
     document.getElementById('selectedSpotName').value = '';
+    document.getElementById('spotCategory').value = '';
 
     showMessage('スポットを削除しました', 'success');
 });
