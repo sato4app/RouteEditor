@@ -81,13 +81,9 @@ document.getElementById('routePath').addEventListener('change', function() {
     const selectedRouteId = this.value;
 
     // モードが有効な場合は一旦すべて解除
-    if (RouteEditor.state.isAddMode) {
-        RouteEditor.exitAddMode(map);
-        showMessage('ルート選択変更により追加モードを解除しました', 'success');
-    }
-    if (RouteEditor.state.isMoveMode) {
-        RouteEditor.exitMoveMode(markerMap, map);
-        showMessage('ルート選択変更により移動モードを解除しました', 'success');
+    if (RouteEditor.state.isAddMoveMode) {
+        RouteEditor.exitAddMoveMode(markerMap, map);
+        showMessage('ルート選択変更により追加・移動モードを解除しました', 'success');
     }
     if (RouteEditor.state.isDeleteMode) {
         RouteEditor.exitDeleteMode(markerMap);
@@ -98,8 +94,8 @@ document.getElementById('routePath').addEventListener('change', function() {
     RouteEditor.highlightRoute(selectedRouteId, getLoadedData(), markerMap, map);
 });
 
-// 追加ボタン
-document.getElementById('addRouteBtn').addEventListener('click', function() {
+// 追加・移動ボタン
+document.getElementById('addMoveRouteBtn').addEventListener('click', function() {
     const path = document.getElementById('routePath').value;
 
     if (!path) {
@@ -107,33 +103,33 @@ document.getElementById('addRouteBtn').addEventListener('click', function() {
         return;
     }
 
-    // 既に追加モードの場合は解除
-    if (RouteEditor.state.isAddMode) {
-        RouteEditor.exitAddMode(map);
-        showMessage('追加モードを解除しました', 'success');
+    // 既に追加・移動モードの場合は解除
+    if (RouteEditor.state.isAddMoveMode) {
+        RouteEditor.exitAddMoveMode(markerMap, map);
+        showMessage('追加・移動モードを解除しました', 'success');
         return;
     }
 
     // 他のモードが有効な場合は解除
-    if (RouteEditor.state.isMoveMode) {
-        RouteEditor.exitMoveMode(markerMap, map);
-    }
     if (RouteEditor.state.isDeleteMode) {
         RouteEditor.exitDeleteMode(markerMap);
     }
 
-    // 追加モードを開始
-    RouteEditor.state.isAddMode = true;
+    // 追加・移動モードを開始
+    RouteEditor.state.isAddMoveMode = true;
     this.classList.add('active');
 
     // カーソルを十字に変更
     map.getContainer().style.cursor = 'crosshair';
 
-    showMessage('地図上をクリックして中間点を追加してください。\n追加ボタンをもう一度クリックで解除', 'success');
+    // 中間点をクリック可能にする（移動モード用）
+    RouteEditor.makeWaypointsClickableForAddMove(path, getLoadedData(), markerMap, map);
 
-    // 地図クリックイベントを設定
+    showMessage('地図上をクリックして中間点を追加できます。\n中間点をクリックして、ドラッグして移動できます。\nボタンをもう一度クリックで解除', 'success');
+
+    // 地図クリックイベントを設定（追加用）
     const handler = function(e) {
-        if (!RouteEditor.state.isAddMode) return;
+        if (!RouteEditor.state.isAddMoveMode) return;
 
         // クリック位置に中間点を追加
         RouteEditor.addWaypointToRoute(path, e.latlng, getLoadedData(), markerMap, geoJsonLayer);
@@ -141,45 +137,14 @@ document.getElementById('addRouteBtn').addEventListener('click', function() {
         // ルート線を再描画
         RouteEditor.redrawRouteLine(path, getLoadedData(), map);
 
+        // 中間点を再度クリック可能にする（新しいマーカーも移動可能にする）
+        RouteEditor.makeWaypointsClickableForAddMove(path, getLoadedData(), markerMap, map);
+
         showMessage('中間点を追加しました', 'success');
     };
 
     RouteEditor.state.mapClickHandler = handler;
     map.on('click', handler);
-});
-
-// 移動ボタン
-document.getElementById('moveRouteBtn').addEventListener('click', function() {
-    const path = document.getElementById('routePath').value;
-
-    if (!path) {
-        showMessage('ルートを選択してください', 'warning');
-        return;
-    }
-
-    // 既に移動モードの場合は解除
-    if (RouteEditor.state.isMoveMode) {
-        RouteEditor.exitMoveMode(markerMap, map);
-        showMessage('移動モードを解除しました', 'success');
-        return;
-    }
-
-    // 他のモードが有効な場合は解除
-    if (RouteEditor.state.isAddMode) {
-        RouteEditor.exitAddMode(map);
-    }
-    if (RouteEditor.state.isDeleteMode) {
-        RouteEditor.exitDeleteMode(markerMap);
-    }
-
-    // 移動モードを開始
-    RouteEditor.state.isMoveMode = true;
-    this.classList.add('active');
-
-    // 中間点をクリック可能にする（移動モード用）
-    RouteEditor.makeWaypointsClickableForMove(path, getLoadedData(), markerMap, map);
-
-    showMessage('移動する中間点をクリックしてください。選択後、ドラッグして移動できます。\n移動ボタンをもう一度クリックで解除', 'success');
 });
 
 // 削除ボタン
@@ -199,11 +164,8 @@ document.getElementById('deleteRouteBtn').addEventListener('click', function() {
     }
 
     // 他のモードが有効な場合は解除
-    if (RouteEditor.state.isAddMode) {
-        RouteEditor.exitAddMode(map);
-    }
-    if (RouteEditor.state.isMoveMode) {
-        RouteEditor.exitMoveMode(markerMap, map);
+    if (RouteEditor.state.isAddMoveMode) {
+        RouteEditor.exitAddMoveMode(markerMap, map);
     }
 
     // 削除モードを開始
@@ -226,11 +188,8 @@ document.getElementById('clearRouteBtn').addEventListener('click', async functio
     }
 
     // 他のモードが有効な場合は解除
-    if (RouteEditor.state.isAddMode) {
-        RouteEditor.exitAddMode(map);
-    }
-    if (RouteEditor.state.isMoveMode) {
-        RouteEditor.exitMoveMode(markerMap, map);
+    if (RouteEditor.state.isAddMoveMode) {
+        RouteEditor.exitAddMoveMode(markerMap, map);
     }
     if (RouteEditor.state.isDeleteMode) {
         RouteEditor.exitDeleteMode(markerMap);

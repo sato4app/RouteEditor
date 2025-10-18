@@ -9,8 +9,7 @@ export const state = {
     allRoutes: [],
     selectedRouteId: null,
     selectedRouteLine: null,
-    isAddMode: false,
-    isMoveMode: false,
+    isAddMoveMode: false,
     isDeleteMode: false,
     mapClickHandler: null,
     draggableMarkers: []
@@ -567,8 +566,8 @@ export function optimizeRoute(routeId, showMessages = true, loadedData, markerMa
     }
 }
 
-// 中間点をクリック可能にする（移動モード用）
-export function makeWaypointsClickableForMove(routeId, loadedData, markerMap, map) {
+// 中間点をクリック可能にする（追加・移動モード用）
+export function makeWaypointsClickableForAddMove(routeId, loadedData, markerMap, map) {
     const waypointMarkers = markerMap.get(routeId);
     if (!Array.isArray(waypointMarkers)) return;
 
@@ -584,7 +583,7 @@ export function makeWaypointsClickableForMove(routeId, loadedData, markerMap, ma
                 marker.off('dragend');
 
                 marker.on('click', function(e) {
-                    if (!state.isMoveMode) return;
+                    if (!state.isAddMoveMode) return;
 
                     L.DomEvent.stopPropagation(e);
 
@@ -639,8 +638,8 @@ export function makeWaypointsClickableForMove(routeId, loadedData, markerMap, ma
                         redrawRouteLine(routeId, loadedData, map);
 
                         // マーカーが再描画された後、再度クリック可能にする
-                        if (state.isMoveMode) {
-                            makeWaypointsClickableForMove(routeId, loadedData, markerMap, map);
+                        if (state.isAddMoveMode) {
+                            makeWaypointsClickableForAddMove(routeId, loadedData, markerMap, map);
                         }
                     });
 
@@ -673,31 +672,21 @@ export function makeWaypointsClickable(routeId, loadedData, markerMap, map) {
     });
 }
 
-// 追加モードを解除
-export function exitAddMode(map) {
-    if (!state.isAddMode) return;
+// 追加・移動モードを解除
+export function exitAddMoveMode(markerMap, map) {
+    if (!state.isAddMoveMode) return;
 
-    state.isAddMode = false;
+    state.isAddMoveMode = false;
 
-    const addBtn = document.getElementById('addRouteBtn');
-    addBtn.classList.remove('active');
+    const addMoveBtn = document.getElementById('addMoveRouteBtn');
+    if (addMoveBtn) {
+        addMoveBtn.classList.remove('active');
+    }
 
     if (state.mapClickHandler) {
         map.off('click', state.mapClickHandler);
         state.mapClickHandler = null;
     }
-
-    map.getContainer().style.cursor = '';
-}
-
-// 移動モードを解除
-export function exitMoveMode(markerMap, map) {
-    if (!state.isMoveMode) return;
-
-    state.isMoveMode = false;
-
-    const moveBtn = document.getElementById('moveRouteBtn');
-    moveBtn.classList.remove('active');
 
     if (state.selectedRouteId) {
         const waypointMarkers = markerMap.get(state.selectedRouteId);
@@ -747,12 +736,8 @@ export function setSelectedRouteId(id) {
     state.selectedRouteId = id;
 }
 
-export function setIsAddMode(value) {
-    state.isAddMode = value;
-}
-
-export function setIsMoveMode(value) {
-    state.isMoveMode = value;
+export function setIsAddMoveMode(value) {
+    state.isAddMoveMode = value;
 }
 
 export function setIsDeleteMode(value) {
@@ -766,12 +751,3 @@ export function setMapClickHandler(handler) {
 export function setDraggableMarkers(markers) {
     state.draggableMarkers = markers;
 }
-
-// 下位互換性のために状態変数を直接エクスポート
-export const { allPoints, allRoutes } = state;
-export const isAddMode = state.isAddMode;
-export const isMoveMode = state.isMoveMode;
-export const isDeleteMode = state.isDeleteMode;
-export const selectedRouteId = state.selectedRouteId;
-export const selectedRouteLine = state.selectedRouteLine;
-export const draggableMarkers = state.draggableMarkers;
