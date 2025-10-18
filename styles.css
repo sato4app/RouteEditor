@@ -310,6 +310,11 @@ button:hover {
     flex: none;
 }
 
+#addMoveRouteBtn,
+#deleteRouteBtn {
+    flex: none;
+}
+
 
 .file-input-label {
     display: inline-block;
