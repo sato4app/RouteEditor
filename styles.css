@@ -310,9 +310,14 @@ button:hover {
     flex: none;
 }
 
-#addMoveRouteBtn,
+#addMoveRouteBtn {
+    flex: none;
+    width: 150px;
+}
+
 #deleteRouteBtn {
     flex: none;
+    width: 80px;
 }
 
 
